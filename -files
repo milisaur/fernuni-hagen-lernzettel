@@ -1,0 +1,307 @@
+[1mdiff --git a/.gitignore b/.gitignore[m
+[1mindex 15ae83d..a40f862 100644[m
+[1m--- a/.gitignore[m
+[1m+++ b/.gitignore[m
+[36m@@ -12,10 +12,23 @@[m
+ # Render outputs[m
+ *.docx[m
+ [m
+[32m+[m[32m# Render-Artefakte[m
+[32m+[m[32m*_files/[m
+[32m+[m[32m*.utf8.md[m
+[32m+[m[32m*.knit.md[m
+[32m+[m[32m*.aux[m
+[32m+[m[32m*.toc[m
+[32m+[m[32m*.tex[m
+[32m+[m[32mnotes/*_files/[m
+[32m+[m
+ # OS[m
+ .DS_Store[m
+ Thumbs.db[m
+ [m
+[32m+[m[32m# Nix[m
+[32m+[m[32m.direnv/[m
+[32m+[m[32m.envrc[m
+[32m+[m
+ # Private data[m
+ private/[m
+ data/raw/[m
+[36m@@ -23,4 +36,13 @@[m [mdata/raw/[m
+ # Logs[m
+ *.log[m
+ [m
+[32m+[m[32m# Neovim Sessions[m
+[32m+[m[32mSession.vim[m
+[32m+[m
+[32m+[m[32m# Temp data[m
+[32m+[m[32m*~[m
+[32m+[m[32m*.swp[m
+[32m+[m[32m*.swo[m
+[32m+[m
+[32m+[m
+ /.quarto/[m
+[1mdiff --git a/exports/NHST.html b/exports/NHST.html[m
+[1mdeleted file mode 100644[m
+[1mindex aef1432..0000000[m
+[1m--- a/exports/NHST.html[m
+[1m+++ /dev/null[m
+[36m@@ -1,8057 +0,0 @@[m
+[31m-<!DOCTYPE html>[m
+[31m-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>[m
+[31m-[m
+[31m-<meta charset="utf-8">[m
+[31m-<meta name="generator" content="quarto-1.7.34">[m
+[31m-[m
+[31m-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">[m
+[31m-[m
+[31m-<meta name="author" content="Emilian Hahlbrock">[m
+[31m-<meta name="dcterms.date" content="2026-01-01">[m
+[31m-[m
+[31m-<title>Inferenzstatistik &amp; NHST</title>[m
+[31m-<style>[m
+[31m-code{white-space: pre-wrap;}[m
+[31m-span.smallcaps{font-variant: small-caps;}[m
+[31m-div.columns{display: flex; gap: min(4vw, 1.5em);}[m
+[31m-div.column{flex: auto; overflow-x: auto;}[m
+[31m-div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}[m
+[31m-ul.task-list{list-style: none;}[m
+[31m-ul.task-list li input[type="checkbox"] {[m
+[31m-  width: 0.8em;[m
+[31m-  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ [m
+[31m-  vertical-align: middle;[m
+[31m-}[m
+[31m-/* CSS for syntax highlighting */[m
+[31m-html { -webkit-text-size-adjust: 100%; }[m
+[31m-pre > code.sourceCode { white-space: pre; position: relative; }[m
+[31m-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }[m
+[31m-pre > code.sourceCode > span:empty { height: 1.2em; }[m
+[31m-.sourceCode { overflow: visible; }[m
+[31m-code.sourceCode > span { color: inherit; text-decoration: inherit; }[m
+[31m-div.sourceCode { margin: 1em 0; }[m
+[31m-pre.sourceCode { margin: 0; }[m
+[31m-@media screen {[m
+[31m-div.sourceCode { overflow: auto; }[m
+[31m-}[m
+[31m-@media print {[m
+[31m-pre > code.sourceCode { white-space: pre-wrap; }[m
+[31m-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }[m
+[31m-}[m
+[31m-pre.numberSource code[m
+[31m-  { counter-reset: source-line 0; }[m
+[31m-pre.numberSource code > span[m
+[31m-  { position: relative; left: -4em; counter-increment: source-line; }[m
+[31m-pre.numberSource code > span > a:first-child::before[m
+[31m-  { content: counter(source-line);[m
+[31m-    position: relative; left: -1em; text-align: right; vertical-align: baseline;[m
+[31m-    border: none; display: inline-block;[m
+[31m-    -webkit-touch-callout: none; -webkit-user-select: none;[m
+[31m-    -khtml-user-select: none; -moz-user-select: none;[m
+[31m-    -ms-user-select: none; user-select: none;[m
+[31m-    padding: 0 4px; width: 4em;[m
+[31m-  }[m
+[31m-pre.numberSource { margin-left: 3em;  padding-left: 4px; }[m
+[31m-div.sourceCode[m
+[31m-  {   }[m
+[31m-@media screen {[m
+[31m-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }[m
+[31m-}[m
+[31m-</style>[m
+[31m-[m
+[31m-[m
+[31m-<script src="NHST_files/libs/clipboard/clipboard.min.js"></script>[m
+[31m-<script src="NHST_files/libs/quarto-html/quarto.js" type="module"></script>[m
+[31m-<script src="NHST_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>[m
+[31m-<script src="NHST_files/libs/quarto-html/popper.min.js"></script>[m
+[31m-<script src="NHST_files/libs/quarto-html/tippy.umd.min.js"></script>[m
+[31m-<script src="NHST_files/libs/quarto-html/anchor.min.js"></script>[m
+[31m-<link href="NHST_files/libs/quarto-html/tippy.css" rel="stylesheet">[m
+[31m-<link href="NHST_files/libs/quarto-html/quarto-syntax-highlighting-c8ad9e5dbd60b7b70b38521ab19b7da4.css" rel="stylesheet" id="quarto-text-highlighting-styles">[m
+[31m-<script src="NHST_files/libs/bootstrap/bootstrap.min.js"></script>[m
+[31m-<link href="NHST_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">[m
+[31m-<link href="NHST_files/libs/bootstrap/bootstrap-818a6fe2ba1b41f10eed98ba69346403.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">[m
+[31m-[m
+[31m-  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>[m
+[31m-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>[m
+[31m-[m
+[31m-<script type="text/javascript">[m
+[31m-const typesetMath = (el) => {[m
+[31m-  if (window.MathJax) {[m
+[31m-    // MathJax Typeset[m
+[31m-    window.MathJax.typeset([el]);[m
+[31m-  } else if (window.katex) {[m
+[31m-    // KaTeX Render[m
+[31m-    var mathElements = el.getElementsByClassName("math");[m
+[31m-    var macros = [];[m
+[31m-    for (var i = 0; i < mathElements.length; i++) {[m
+[31m-      var texText = mathElements[i].firstChild;[m
+[31m-      if (mathElements[i].tagName == "SPAN") {[m
+[31m-        window.katex.render(texText.data, mathElements[i], {[m
+[31m-          displayMode: mathElements[i].classList.contains('display'),[m
+[31m-          throwOnError: false,[m
+[31m-          macros: macros,[m
+[31m-          fleqn: false[m
+[31m-        });[m
+[31m-      }[m
+[31m-    }[m
+[31m-  }[m
+[31m-}[m
+[31m-window.Quarto = {[m
+[31m-  typesetMath[m
+[31m-};[m
+[31m-</script>[m
+[31m-[m
+[31m-</head>[m
+[31m-[m
+[31m-<body class="quarto-light">[m
+[31m-[m
+[31m-<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">[m
+[31m-<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">[m
+[31m-  <nav id="TOC" role="doc-toc" class="toc-active">[m
+[31m-    <h2 id="toc-title">Table of contents</h2>[m
+[31m-   [m
+[31m-  <ul>[m
+[31m-  <li><a href="#inferenzstatistik-und-nhst" id="toc-inferenzstatistik-und-nhst" class="nav-link active" data-scroll-target="#inferenzstatistik-und-nhst">Inferenzstatistik und NHST</a>[m
+[31m-  <ul class="collapse">[m
+[31m-  <li><a href="#öffentliche-beispieldaten-für-alle-beispiele" id="toc-öffentliche-beispieldaten-für-alle-beispiele" class="nav-link" data-scroll-target="#öffentliche-beispieldaten-für-alle-beispiele">Öffentliche Beispieldaten für alle Beispiele</a></li>[m
+[31m-  </ul></li>[m
+[31m-  <li><a href="#grundidee-der-inferenzstatistik" id="toc-grundidee-der-inferenzstatistik" class="nav-link" data-scroll-target="#grundidee-der-inferenzstatistik">1. Grundidee der Inferenzstatistik</a>[m
+[31m-  <ul class="collapse">[m
+[31m-  <li><a href="#ziel" id="toc-ziel" class="nav-link" data-scroll-target="#ziel">Ziel</a></li>[m
+[31m-  <li><a href="#problem" id="toc-problem" class="nav-link" data-scroll-target="#problem">Problem</a></li>[m
+[31m-  <li><a href="#warum-funktioniert-es-trotzdem" id="toc-warum-funktioniert-es-trotzdem" class="nav-link" data-scroll-target="#warum-funktioniert-es-trotzdem">Warum funktioniert es trotzdem?</a></li>[m
+[31m-  <li><a href="#lösung" id="toc-lösung" class="nav-link" data-scroll-target="#lösung">Lösung</a></li>[m
+[31m-  </ul></li>[m
+[31m-  <li><a href="#grundbegriffe" id="toc-grundbegriffe" class="nav-link" data-scroll-target="#grundbegriffe">2. Grundbegriffe</a>[m
+[31m-  <ul class="collapse">[m
+[31m-  <li><a href="#population-vs.-stichprobe" id="toc-population-vs.-stichprobe" class="nav-link" data-scroll-target="#population-vs.-stichprobe">Population vs.&nbsp;Stichprobe</a></li>[m
+[31m-  <li><a href="#parameter-vs.-statistik" id="toc-parameter-vs.-statistik" class="nav-link" data-scroll-target="#parameter-vs.-statistik">Parameter vs.&nbsp;Statistik</a></li>[m
+[31m-  <li><a href="#stichprobentypen" id="toc-stichprobentypen" class="nav-link" data-scroll-target="#stichprobentypen">Stichprobentypen</a></li>[m
+[31m-  </ul></li>[m
+[31m-  <li><a href="#wahrscheinlichkeit" id="toc-wahrscheinlichkeit" class="nav-link" data-scroll-target="#wahrscheinlichkeit">3. Wahrscheinlichkeit</a>[m
+[31m-  <ul class="collapse">[m
+[31m-  <li><a href="#subjektive-wahrscheinlichkeit" id="toc-subjektive-wahrscheinlichkeit" class="nav-link" data-scroll-target="#subjektive-wahrscheinlichkeit">Subjektive Wahrscheinlichkeit</a></li>[m
+[31m-  <li><a href="#klassische-wahrscheinlichkeit" id="toc-klassische-wahrscheinlichkeit" class="nav-link" data-scroll-target="#klassische-wahrscheinlichkeit">Klassische Wahrscheinlichkeit</a></li>[m
+[31m-  <li><a href="#frequentistische-wahrscheinlichkeit" id="toc-frequentistische-wahrscheinlichkeit" class="nav-link" data-scroll-target="#frequentistische-wahrscheinlichkeit">Frequentistische Wahrscheinlichkeit</a></li>[m
+[31m-  <li><a href="#relative-häufigkeit" id="toc-relative-häufigkeit" class="nav-link" data-scroll-target="#relative-häufigkeit">Relative Häufigkeit</a></li>[m
+[31m-  <li><a href="#konjunktion" id="toc-konjunktion" class="nav-link" data-scroll-target="#konjunktion">Konjunktion</a></li>[m
+[31m-  <li><a href="#bedingte-wahrscheinlichkeit" id="toc-bedingte-wahrscheinlichkeit" class="nav-link" data-scroll-target="#bedingte-wahrscheinlichkeit">Bedingte Wahrscheinlichkeit</a></li>[m
+[31m-  <li><a href="#unabhängigkeit" id="toc-unabhängigkeit" class="nav-link" data-scroll-target="#unabhängigkeit">Unabhängigkeit</a></li>[m
+[31m-  <li><a href="#produktregel" id="toc-produktregel" class="nav-link" data-scroll-target="#produktregel">Produktregel</a></li>[m
+[31m-  </ul></li>[m
+[31m-  <li><a href="#stichprobenverteilung" id="toc-stichprobenverteilung" class="nav-link" data-scroll-target="#stichprobenverteilung">4. Stichprobenverteilung</a>[m
+[31m-  <ul class="collapse">[m
+[31m-  <li><a href="#definition" id="toc-definition" class="nav-link" data-scroll-target="#definition">Definition</a></li>[m
+[31m-  <li><a href="#empirische-stichprobenverteilung" id="toc-empirische-stichprobenverteilung" class="nav-link" data-scroll-target="#empirische-stichprobenverteilung">Empirische Stichprobenverteilung</a></li>[m
+[31m-  <li><a href="#theoretische-stichprobenverteilung" id="toc-theoretische-stichprobenverteilung" class="nav-link" data-scroll-target="#theoretische-stichprobenverteilung">Theoretische Stichprobenverteilung</a></li>[m
+[31m-  <li><a href="#erwartungswert" id="toc-erwartungswert" class="nav-link" data-scroll-target="#erwartungswert">Erwartungswert</a>[m
+[31m-  <ul class="collapse">[m
+[31m-  <li><a href="#eigenschaften-guter-schätzer" id="toc-eigenschaften-guter-schätzer" class="nav-link" data-scroll-target="#eigenschaften-guter-schätzer">Eigenschaften guter Schätzer</a></li>[m
+[31m-  </ul></li>[m
+[31m-  <li><a href="#varianz-standardfehler" id="toc-varianz-standardfehler" class="nav-link" data-scroll-target="#varianz-standardfehler">Varianz &amp; Standardfehler</a>[m
+[31m-  <ul class="collapse">[m
+[31m-  <li><a href="#zusammenhang-der-schreibweisen" id="toc-zusammenhang-der-schreibweisen" class="nav-link" data-scroll-target="#zusammenhang-der-schreibweisen">Zusammenhang der Schreibweisen</a></li>[m
+[31m-  <li><a href="#formal" id="toc-formal" class="nav-link" data-scroll-target="#formal">Formal</a></li>[m
+[31m-  </ul></li>[m
+[31m-  <li><a href="#bedeutung-des-standardfehlers" id="toc-bedeutung-des-standardfehlers" class="nav-link" data-scroll-target="#bedeutung-des-standardfehlers">Bedeutung des Standardfehlers</a></li>[m
+[31m-  <li><a href="#konsequenzen" id="toc-konsequenzen" class="nav-link" data-scroll-target="#konsequenzen">Konsequenzen</a>[m
+[31m-  <ul class="collapse">[m
+[31m-  <li><a href="#reminder-standardabweichung-vs.-standardfehler" id="toc-reminder-standardabweichung-vs.-standardfehler" class="nav-link" data-scroll-target="#reminder-standardabweichung-vs.-standardfehler">Reminder Standardabweichung vs.&nbsp;Standardfehler:</a></li>[m
+[31m-  </ul></li>[m
+[31m-  </ul></li>[m
+[31m-  <li><a href="#zentrale-sätze" id="toc-zentrale-sätze" class="nav-link" data-scroll-target="#zentrale-sätze">5. Zentrale Sätze</a>[m
+[31m-  <ul class="collapse">[m
+[31m-  <li><a href="#gesetz-der-großen-zahlen" id="toc-gesetz-der-großen-zahlen" class="nav-link" data-scroll-target="#gesetz-der-großen-zahlen">Gesetz der großen Zahlen</a></li>[m
+[31m-  <li><a href="#zentraler-grenzwertsatz" id="toc-zentraler-grenzwertsatz" class="nav-link" data-scroll-target="#zentraler-grenzwertsatz">Zentraler Grenzwertsatz</a></li>[m
+[31m-  </ul></li>[m
+[31m-  <li><a href="#verteilungen" id="toc-verteilungen" class="nav-link" data-scroll-target="#verteilungen">6. Verteilungen</a>[m
+[31m-  <ul class="collapse">[m
+[31m-  <li><a href="#normalverteilung" id="toc-normalverteilung" class="nav-link" data-scroll-target="#normalverteilung">Normalverteilung</a></li>[m
+[31m-  <li><a href="#funktionen-der-normalverteilung" id="toc-funktionen-der-normalverteilung" class="nav-link" data-scroll-target="#funktionen-der-normalverteilung">Funktionen der Normalverteilung</a>[m
+[31m-  <ul class="collapse">[m
+[31m-  <li><a href="#dichtefunktion-mit-dnorm" id="toc-dichtefunktion-mit-dnorm" class="nav-link" data-scroll-target="#dichtefunktion-mit-dnorm">Dichtefunktion mit <code>dnorm()</code></a></li>[m
+[31m-  </ul></li>[m
+[31m-  <li><a href="#wahrscheinlichkeit-mit-pnorm" id="toc-wahrscheinlichkeit-mit-pnorm" class="nav-link" data-scroll-target="#wahrscheinlichkeit-mit-pnorm">Wahrscheinlichkeit mit <code>pnorm()</code></a></li>[m
+[31m-  <li><a href="#quantile-mit-qnorm" id="toc-quantile-mit-qnorm" class="nav-link" data-scroll-target="#quantile-mit-qnorm">Quantile mit <code>qnorm()</code></a></li>[m
+[31m-  <li><a href="#zufallszahlen-mit-rnorm" id="toc-zufallszahlen-mit-rnorm" class="nav-link" data-scroll-target="#zufallszahlen-mit-rnorm">Zufallszahlen mit <code>rnorm()</code></a>[m
+[31m-  <ul class="collapse">[m
+[31m-  <li><a href="#regel" id="toc-regel" class="nav-link" data-scroll-target="#regel">68-95-99 Regel</a></li>[m
+[31m-  </ul></li>[m
+[31m-  <li><a href="#standardisierung" id="toc-standardisierung" class="nav-link" data-scroll-target="#standardisierung">Standardisierung</a></li>[m
+[31m-  <li><a href="#standardnormalverteilung" id="toc-standardnormalverteilung" class="nav-link" data-scroll-target="#standardnormalverteilung">Standardnormalverteilung</a></li>[m
+[31m-  <li><a href="#t-verteilung" id="toc-t-verteilung" class="nav-link" data-scroll-target="#t-verteilung">t-Verteilung</a>[m
+[31m-  <ul class="collapse">[m
+[31m-  <li><a href="#warum-t-statt-z" id="toc-warum-t-statt-z" class="nav-link" data-scroll-target="#warum-t-statt-z">Warum t statt z?</a></li>[m
+[31m-  <li><a href="#eigenschaften-der-t-verteilung" id="toc-eigenschaften-der-t-verteilung" class="nav-link" data-scroll-target="#eigenschaften-der-t-verteilung">Eigenschaften der t-Verteilung</a></li>[m
+[31m-  </ul></li>[m
+[31m-  <li><a href="#freiheitsgrade" id="toc-freiheitsgrade" class="nav-link" data-scroll-target="#freiheitsgrade">Freiheitsgrade</a></li>[m
+[31m-  <li><a href="#binomialverteilung" id="toc-binomialverteilung" class="nav-link" data-scroll-target="#binomialverteilung">Binomialverteilung</a>[m
+[31m-  <ul class="collapse">[m
+[31m-  <li><a href="#wahrscheinlichkeit-für-genau-x-erfolge-mit-dbinom" id="toc-wahrscheinlichkeit-für-genau-x-erfolge-mit-dbinom" class="nav-link" data-scroll-target="#wahrscheinlichkeit-für-genau-x-erfolge-mit-dbinom">Wahrscheinlichkeit für genau x Erfolge mit <code>dbinom()</code></a></li>[m
+[31m-  <li><a href="#kumulative-wahrscheinlichkeit-mit-pbinom" id="toc-kumulative-wahrscheinlichkeit-mit-pbinom" class="nav-link" data-scroll-target="#kumulative-wahrscheinlichkeit-mit-pbinom">Kumulative Wahrscheinlichkeit mit <code>pbinom()</code></a></li>[m
+[31m-  <li><a href="#quantile-mit-qbinom" id="toc-quantile-mit-qbinom" class="nav-link" data-scroll-target="#quantile-mit-qbinom">Quantile mit <code>qbinom()</code></a></li>[m
+[31m-  <li><a href="#zufallszahlen-mit-rbinom" id="toc-zufallszahlen-mit-rbinom" class="nav-link" data-scroll-target="#zufallszahlen-mit-rbinom">Zufallszahlen mit <code>rbinom()</code></a></li>[m
+[31m-  </ul></li>[m
+[31m-  <li><a href="#normalapproximation" id="toc-normalapproximation" class="nav-link" data-scroll-target="#normalapproximation">Normalapproximation</a></li>[m
+[31m-  <li><a href="#beispiel" id="toc-beispiel" class="nav-link" data-scroll-target="#beispiel">Beispiel</a>[m
+[31m-  <ul class="collapse">[m
+[31m-  <li><a href="#wahrscheinlichkeit-näherungsweise-berechnen" id="toc-wahrscheinlichkeit-näherungsweise-berechnen" class="nav-link" data-scroll-target="#wahrscheinlichkeit-näherungsweise-berechnen">Wahrscheinlichkeit näherungsweise berechnen</a></li>[m
+[31m-  </ul></li>[m
+[31m-  <li><a href="#stetigkeitskorrektur" id="toc-stetigkeitskorrektur" class="nav-link" data-scroll-target="#stetigkeitskorrektur">Stetigkeitskorrektur</a></li>[m
+[31m-  </ul></li>[m
+[31m-  <li><a href="#konfidenzintervalle" id="toc-konfidenzintervalle" class="nav-link" data-scroll-target="#konfidenzintervalle">7. Konfidenzintervalle</a>[m
+[31m-  <ul class="collapse">[m
+[31m-  <li><a href="#allgemeine-form" id="toc-allgemeine-form" class="nav-link" data-scroll-target="#allgemeine-form">Allgemeine Form</a></li>[m
+[31m-  <li><a href="#mittelwert-wichtig" id="toc-mittelwert-wichtig" class="nav-link" data-scroll-target="#mittelwert-wichtig">Mittelwert (wichtig!)</a></li>[m
+[31m-  <li><a href="#anteil" id="toc-anteil" class="nav-link" data-scroll-target="#anteil">Anteil</a></li>[m
+[31m-  <li><a href="#zusammenhang-mit-alpha" id="toc-zusammenhang-mit-alpha" class="nav-link" data-scroll-target="#zusammenhang-mit-alpha">Zusammenhang mit Alpha</a></li>[m
+[31m-  <li><a href="#einflussfaktoren-auf-die-breite" id="toc-einflussfaktoren-auf-die-breite" class="nav-link" data-scroll-target="#einflussfaktoren-auf-die-breite">Einflussfaktoren auf die Breite</a></li>[m
+[31m-  <li><a href="#freiheitsgrade-1" id="toc-freiheitsgrade-1" class="nav-link" data-scroll-target="#freiheitsgrade-1">Freiheitsgrade</a></li>[m
+[31m-  <li><a href="#interpretation" id="toc-interpretation" class="nav-link" data-scroll-target="#interpretation">Interpretation</a></li>[m
+[31m-  <li><a href="#zusammenhang-mit-tests" id="toc-zusammenhang-mit-tests" class="nav-link" data-scroll-target="#zusammenhang-mit-tests">Zusammenhang mit Tests</a></li>[m
+[31m-  <li><a href="#r-code" id="toc-r-code" class="nav-link" data-scroll-target="#r-code">R-Code</a>[m
+[31m-  <ul class="collapse">[m
+[31m-  <li><a href="#konfidenzintervall-für-den-mittelwert-mit-ci" id="toc-konfidenzintervall-für-den-mittelwert-mit-ci" class="nav-link" data-scroll-target="#konfidenzintervall-für-den-mittelwert-mit-ci">Konfidenzintervall für den Mittelwert mit <code>CI()</code></a></li>[m
+[31m-  <li><a href="#konfidenzintervall-über-t.test" id="toc-konfidenzintervall-über-t.test" class="nav-link" data-scroll-target="#konfidenzintervall-über-t.test">Konfidenzintervall über <code>t.test()</code></a></li>[m
+[31m-  <li><a href="#konfidenzintervall-für-einen-anteil-mit-prop.test" id="toc-konfidenzintervall-für-einen-anteil-mit-prop.test" class="nav-link" data-scroll-target="#konfidenzintervall-für-einen-anteil-mit-prop.test">Konfidenzintervall für einen Anteil mit <code>prop.test()</code></a></li>[m
+[31m-  <li><a href="#exaktes-konfidenzintervall-mit-binom.test" id="toc-exaktes-konfidenzintervall-mit-binom.test" class="nav-link" data-scroll-target="#exaktes-konfidenzintervall-mit-binom.test">Exaktes Konfidenzintervall mit <code>binom.test()</code></a></li>[m
+[31m-  <li><a href="#unterschied" id="toc-unterschied" class="nav-link" data-scroll-target="#unterschied">Unterschied</a></li>[m
+[31m-  </ul></li>[m
+[31m-  </ul></li>[m
+[31m-  <li><a href="#signifikanztests-nhst" id="toc-signifikanztests-nhst" class="nav-link" data-scroll-target="#signifikanztests-nhst">8. Signifikanztests (NHST)</a>[m
+[31m-  <ul class="collapse">[m
+[31m-  <li><a href="#nullhypothese-h_0" id="toc-nullhypothese-h_0" class="nav-link" data-scroll-target="#nullhypothese-h_0">Nullhypothese <span class="math inline">\(H_0\)</span></a></li>[m
+[31m-  <li><a href="#alternativhypothese-h_1" id="toc-alternativhypothese-h_1" class="nav-link" data-scroll-target="#alternativhypothese-h_1">Alternativhypothese <span class="math inline">\(H_1\)</span></a></li>[m
+[31m-  <li><a href="#typische-annahmen-parametrischer-tests" id="toc-typische-annahmen-parametrischer-tests" class="nav-link" data-scroll-target="#typische-annahmen-parametrischer-tests">typische Annahmen parametrischer Tests</a></li>[m
+[31m-  <li><a href="#einseitig-vs.-zweiseitig" id="toc-einseitig-vs.-zweiseitig" class="nav-link" data-scroll-target="#einseitig-vs.-zweiseitig">Einseitig vs.&nbsp;zweiseitig</a></li>[m
+[31m-  <li><a href="#teststatistik" id="toc-teststatistik" class="nav-link" data-scroll-target="#teststatistik">Teststatistik</a></li>[m
+[31m-  <li><a href="#entscheidungsregel" id="toc-entscheidungsregel" class="nav-link" data-scroll-target="#entscheidungsregel">Entscheidungsregel</a></li>[m
+[31m-  <li><a href="#kritischer-wert" id="toc-kritischer-wert" class="nav-link" data-scroll-target="#kritischer-wert">Kritischer Wert</a></li>[m
+[31m-  <li><a href="#p-wert" id="toc-p-wert" class="nav-link" data-scroll-target="#p-wert">p-Wert</a></li>[m
+[31m-  <li><a href="#t-vs.-z" id="toc-t-vs.-z" class="nav-link" data-scroll-target="#t-vs.-z">t vs.&nbsp;z</a></li>[m
+[31m-  </ul></li>[m
+[31m-  <li><a href="#fehler-power" id="toc-fehler-power" class="nav-link" data-scroll-target="#fehler-power">9. Fehler &amp; Power</a>[m
+[31m-  <ul class="collapse">[m
+[31m-  <li><a href="#fehlerarten" id="toc-fehlerarten" class="nav-link" data-scroll-target="#fehlerarten">Fehlerarten</a>[m
+[31m-  <ul class="collapse">[m
+[31m-  <li><a href="#fehler-1.-art" id="toc-fehler-1.-art" class="nav-link" data-scroll-target="#fehler-1.-art">Fehler 1. Art</a></li>[m
+[31m-  <li><a href="#fehler-2.-art" id="toc-fehler-2.-art" class="nav-link" data-scroll-target="#fehler-2.-art">Fehler 2. Art</a></li>[m
+[31m-  </ul></li>[m
+[31m-  <li><a href="#zusammenhang" id="toc-zusammenhang" class="nav-link" data-scroll-target="#zusammenhang">Zusammenhang</a></li>[m
+[31m-  <li><a href="#power" id="toc-power" class="nav-link" data-scroll-target="#power">Power</a></li>[m
+[31m-  <li><a href="#einflussfaktoren" id="toc-einflussfaktoren" class="nav-link" data-scroll-target="#einflussfaktoren">Einflussfaktoren</a>[m
+[31m-  <ul class="collapse">[m
+[31m-  <li><a href="#wichtig" id="toc-wichtig" class="nav-link" data-scroll-target="#wichtig">Wichtig</a></li>[m
+[31m-  </ul></li>[m
+[31m-  </ul></li>[m
+[31m-  <li><a href="#effektgröße-cohens-d" id="toc-effektgröße-cohens-d" class="nav-link" data-scroll-target="#effektgröße-cohens-d">10. Effektgröße / Cohen’s d</a>[m
+[31m-  <ul class="collapse">[m
+[31m-  <li><a href="#interpretation-1" id="toc-interpretation-1" class="nav-link" data-scroll-target="#interpretation-1">Interpretation</a></li>[m
+[31m-  </ul></li>[m
+[31m-  <li><a href="#fisher-vs.-neyman-pearson" id="toc-fisher-vs.-neyman-pearson" class="nav-link" data-scroll-target="#fisher-vs.-neyman-pearson">11. Fisher vs.&nbsp;Neyman-Pearson</a>[m
+[31m-  <ul class="collapse">[m
+[31m-  <li><a href="#fisher" id="toc-fisher" class="nav-link" data-scroll-target="#fisher">Fisher</a></li>[m
+[31m-  <li><a href="#neyman-pearson" id="toc-neyman-pearson" class="nav-link" data-scroll-target="#neyman-pearson">Neyman-Pearson</a></li>[m
+[31m-  </ul></li>[m
+[31m-  <li><a href="#gesamtzusammenhang" id="toc-gesamtzusammenhang" class="nav-link" data-scroll-target="#gesamtzusammenhang">12. Gesamtzusammenhang</a>[m
+[31m-  <ul class="collapse">[m
+[31m-  <li><a href="#gesamtidee" id="toc-gesamtidee" class="nav-link" data-scroll-ta

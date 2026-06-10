@@ -1,0 +1,1896 @@
+---
+title: Deskriptive Statistik
+author: "Emilian Hahlbrock"
+date: "2026-06-10"
+version: "v1.0"
+license: "CC BY-NC-SA 4.0"
+
+format:
+  html:
+    toc: true
+    code-fold: show
+    code-summary: "R-Code anzeigen"
+---
+
+# Deskriptive Statistik
+
+> Version: v1.0
+> Letzte Aktualisierung: 01.06.2026
+
+```{r echo=FALSE}
+system("git log -1 --date=short --format='%cd'", intern = TRUE)
+```
+
+## Öffentliche Beispieldaten für alle Beispiele
+
+Die folgenden Beispiele verwenden keine Uni-Datensätze, sondern einen reproduzierbaren synthetischen Datensatz. Dadurch kann der Lernzettel öffentlich geteilt werden.
+
+```{r}
+set.seed(123)
+
+demo <- data.frame(
+  gruppe = rep(c("Kontrolle", "Intervention"), each = 40),
+  score = c(
+    rnorm(40, mean = 100, sd = 15),
+    rnorm(40, mean = 108, sd = 15)
+  )
+)
+
+head(demo)
+```
+
+
+# 1. Ziel der Statistik
+
+## Deskriptive Statistik
+Die deskriptive Statistik beschreibt, ordnet und verdichtet vorhandene Daten.
+
+Typische Fragen:
+
+- Wie sieht die Verteilung aus?
+- Wo liegt die Mitte?
+- Wie stark streuen die Werte?
+- Gibt es Zusammenhänge zwischen Variablen?
+
+## Inferenzstatistik
+Die Inferenzstatistik zieht Schlüsse von einer Stichprobe auf eine Population.
+ 
+In diesem Lernzettel geht es hauptsächlich um deskriptive Statistik.
+
+# 2. Grundbegriffe
+
+## Merkmal / Variable
+Eine Variable ist eine Eigenschaft, die gemessen oder erhoben wird.
+
+Beispiele:
+
+- Geschlecht
+- Alter
+- Körpergröße
+- Einkommen
+- Schulnote
+
+## Ausprägung / Wert
+Eine Ausprägung ist ein konkreter Wert einer Variable.
+
+Beispiel:
+
+- Variable: Alter
+- Ausprägung: 23
+
+## Beobachtung / Fall
+Ein Fall ist eine Untersuchungseinheit.
+
+Beispiele:
+
+- eine Person
+- ein Haushalt
+- ein Unternehmen
+
+## Stichprobe
+Die Stichprobe ist die tatsächlich untersuchte Teilmenge.
+
+## Population / Grundgesamtheit
+Die Population ist die gesamte interessierende Menge.
+
+
+# 3. Datenmatrix
+
+Daten werden häufig in einer Matrix dargestellt:
+
+- n = Anzahl der Fälle (Merkmalsträger)
+- p = Anzahl der Variablen (Merkmale)
+
+Die Matrix hat die Form:
+
+n × p
+
+- Zeilen: Fälle
+- Spalten: Variablen
+- Zellen: Messwerte
+
+## Indizes
+
+Zur Kennzeichnung werden Indizes verwendet:
+
+- $x_{mi}$: Messwert von Person m bei Merkmal i
+- m: Merkmalsträger (1 bis n)
+- i: Merkmal (1 bis p)
+- j: Merkmalsausprägung
+
+# 4. Häufigkeiten
+
+## Absolute Häufigkeit
+
+$$
+n_j
+$$
+
+Die absolute Häufigkeit gibt an, wie oft eine Ausprägung vorkommt.
+
+```{r}
+daten <- c(3, 7, 12, 18, 25, 30, 45, 50, 60, 80, 100)
+table(daten)
+```
+
+## Relative Häufigkeit
+
+$$
+h_j = \frac{n_j}{n}
+$$
+
+Die relative Häufigkeit gibt den Anteil einer Ausprägung an der Gesamtzahl der Beobachtungen an.
+
+```{r}
+daten <- c(1.3, 2.0, 1.7, 3.3, 2.3)
+prop.table(table(daten))
+```
+
+## Prozentuale Häufigkeit
+
+$$
+h_j \cdot 100
+$$
+
+```{r}
+daten <- c(1.3, 2.0, 1.7, 3.3, 2.3)
+100 * prop.table(table(daten))
+```
+
+→ runden
+
+```{r}
+x <- 0.457438723874
+round(x, 2)
+```
+
+
+## Kumulierte Häufigkeit
+
+Kumulierte Häufigkeiten werden aufaddiert.
+
+Sie beantworten die Frage:
+
+> Wie viele bzw. wie viel Prozent liegen bis einschließlich zu diesem Wert?
+
+Bei ordinalen oder metrischen Variablen sinnvoll, bei nominalen Variablen meistens nicht sinnvoll.
+
+
+```{r}
+daten <- c(1.3, 2.0, 1.7, 3.3, 2.3)
+cumsum(table(daten))
+```
+
+→ kumulierte absolute Häufigkeiten
+
+---
+
+```{r}
+daten <- c(1.3, 2.0, 1.7, 3.3, 2.3)
+cumsum(prop.table(table(daten)))
+```
+
+→ kumulierte relative Häufigkeiten
+
+---
+
+```{r}
+daten <- c(1.3, 2.0, 1.7, 3.3, 2.3)
+cumsum(100 * prop.table(table(daten)))
+```
+
+→ kumulierte Prozentwerte
+
+# 5. Häufigkeitstabellen und Grafiken
+
+## Urliste
+
+Eine Urliste ist eine ungeordnete Liste aller Messwerte.
+
+Beispiel:
+3, 1, 4, 2, 2, 5, 1
+
+Eigenschaften:
+
+- enthält alle Rohdaten
+- noch nicht sortiert
+- Ausgangspunkt für Häufigkeitstabellen
+
+## Tabellen kombinieren
+
+```{r}
+# Zeilen zusammenfügen mit `rbind()
+a <- c(1, 2, 3)
+b <- c(4, 5, 6)
+
+rbind(a, b)
+```
+
+→ fügt Vektoren als Zeilen zusammen
+
+```{r}
+# Spalten zusammenfügen mit `cbind()
+a <- c(1, 2, 3)
+b <- c(4, 5, 6)
+
+cbind(a, b)
+```
+
+→ fügt Vektoren als Spalten zusammen
+
+## Häufigkeitstabelle
+
+Eine Häufigkeitstabelle enthält typischerweise:
+
+| Wert | absolute Häufigkeit | relative Häufigkeit | kumulierte Häufigkeit |
+|:---:|:---:|:---:|:---:|
+| $x_1$ | $n_1$ | $h_1$ | $H_1$ |
+| $x_2$ | $n_2$ | $h_2$ | $H_2$ |
+
+
+## Säulendiagramm
+
+- Kategorien auf x-Achse
+- Häufigkeiten auf y-Achse
+
+Geeignet für:
+
+- nominale Variablen
+- ordinale Variablen
+- diskrete Werte
+
+## Balkendiagramm
+
+- gedrehtes Säulendiagramm
+- bessere Lesbarkeit bei vielen Kategorien
+
+## Histogramm
+
+Geeignet für:
+
+- metrische Variablen
+- gruppierte stetige Daten
+
+Wichtig:
+
+Ein Histogramm zeigt Klassenintervalle, nicht einfach einzelne Kategorien.
+
+## Kreisdiagramm
+
+Kann Anteile darstellen, ist aber oft weniger präzise als ein Balkendiagramm.
+
+- Winkel entspricht relativer Häufigkeit
+- größte Kategorie beginnt bei „12 Uhr“
+- Reihenfolge im Uhrzeigersinn
+- schlecht für Vergleiche
+
+# 6. Klasseneinteilung bei metrischen Daten
+
+Bei vielen metrischen Werten werden Daten oft in Klassen eingeteilt.
+
+Beispiel:
+
+| Klasse | Häufigkeit |
+|:---:|:---:|
+| 0–10 | 4 |
+| 10–20 | 9 |
+| 20–30 | 6 |
+
+## Klassenbreite
+
+$$
+\text{Klassenbreite} = \text{obere Klassengrenze} - \text{untere Klassengrenze}
+$$
+
+## Klassenmitte
+
+$$
+\text{Klassenmitte} = \frac{\text{untere Grenze} + \text{obere Grenze}}{2}
+$$
+
+Die Klassenmitte wird oft als Stellvertreterwert für Berechnungen genutzt.
+
+# 7. Skalenniveau
+
+| Skalenniveau | Bedeutung | Beispiele | Sinnvolle Kennwerte |
+|:---:|:---:|:---:|:---:|
+| nominal | Kategorien ohne Rangordnung | Geschlecht, Studienfach | Modus, Häufigkeiten |
+| ordinal | Rangordnung, Abstände nicht interpretierbar | Schulnoten, Rangplätze | Median, Quartile, Modus |
+| intervallskaliert | gleiche Abstände, kein natürlicher Nullpunkt | Temperatur in °C | Mittelwert, Varianz, Standardabweichung |
+| verhältnisskaliert | gleiche Abstände und natürlicher Nullpunkt | Größe, Gewicht, Alter | alle metrischen Kennwerte |
+
+## Nominalskala
+
+- Namen / Kategorien
+- Unterscheidung zwischen gleich und ungleich, keine Sortierung, kein "besser" und "schlechter"
+- z.B. Geschlecht, Augenfarbe, Wohnort
+
+## Ordinalskala
+
+- Rangordnung
+- Unterscheidet "Größer-Kleiner"-Relation ($A>B$)
+- z.B. Tabellenplätze beim Sport, Schulnoten, Windstärken, Bildungsabschlüsse
+- die Abstände zwischen den Rängen sind nicht interpretierbar!
+
+Es gibt zwei Arten:
+
+### 1. Singuläre Daten
+
+- jeder Rang kommt nur einmal vor
+- Median, Modus oft nicht sinnvoll
+
+### 2. Kategoriale ordinale Daten
+
+- Werte werden zu Klassen zusammengefasst
+- Median und Modus sinnvoll
+
+## Intervallskala
+
+- gleiche Abstände: Abstände / Intervalle zwischen den Werten gleich groß und interpretierbar
+- z.B. Temperatur in °C, IQ-Werte, Kalenderjahre
+- es gibt keinen natürlichen Nullpunkt, 20°C ist nicht doppelt so warm wie 10°C
+
+## Ratio-/ Verhältnisskala
+
+- zusätzlich natürlicher Nullpunkt
+- z.B. Einkommen, Alter in Jahren, Reaktionszeit in ms 
+- Vorteil: Verhältnisbindung, A ist doppelt so alt wie B. 
+
+## Absolutskala
+
+- auch Maßeinheit natürlich vorgeben und unveränderlich
+- zumeist Häufigkeiten / Anzahl
+- z.B. Anzahl der Kinder in einer Familie, Anzahl der Fehler im Test
+
+## Metrisch umfasst:
+
+- intervallskaliert
+- verhältnisskaliert
+- absolutskaliert
+
+# 8. Äquivalenzrelation
+
+Eine Relation $R$ heißt Äquivalenzrelation, wenn sie folgende drei Eigenschaften erfüllt:
+
+1. reflexiv  
+2. symmetrisch  
+3. transitiv  
+
+## 8.1 Reflexivität
+
+$$
+a \sim a
+$$
+
+Jedes Element steht mit sich selbst in Relation.
+
+### Beispiel
+
+„hat dieselbe Haarfarbe wie“
+
+→ Jede Person hat dieselbe Haarfarbe wie sie selbst.
+
+## 8.2 Symmetrie
+
+Wenn:
+
+$$
+a \sim b
+$$
+
+dann auch:
+
+$$
+b \sim a
+$$
+
+### Beispiel
+
+„ist gleich alt wie“
+
+Wenn A gleich alt wie B ist, dann auch B gleich alt wie A.
+
+## 8.3 Transitivität
+
+Wenn:
+
+$$
+a \sim b
+$$
+
+und
+
+$$
+b \sim c
+$$
+
+dann gilt:
+
+$$
+a \sim c
+$$
+
+### Beispiel
+
+„hat dieselbe Augenfarbe wie“
+
+Wenn A dieselbe Augenfarbe wie B hat und B dieselbe Augenfarbe wie C, dann hat auch A dieselbe Augenfarbe wie C.
+
+## 8.4 Äquivalenzklassen
+
+Äquivalenzrelationen teilen Elemente in Gruppen gleicher Elemente ein.
+
+Diese Gruppen heißen:
+
+$$
+\text{Äquivalenzklassen}
+$$
+
+
+# 9. Lagemaße
+
+Lagemaße beschreiben die Mitte oder typische Lage einer Verteilung.
+
+## 9.1 Modalwert
+
+Der Modalwert ist der häufigste Wert.
+
+Eigenschaften:
+
+- ab nominalem Skalenniveau möglich
+- kann mehrere Werte haben
+- bei allen Variablentypen nutzbar
+
+```{r}
+daten <- c(2, 10, 4, 10, 4, 4, 5)
+as.numeric(names(table(daten))[which.max(table(daten))])
+```
+
+## 9.2 Median
+
+Der Median ist der Wert, der die geordneten Daten in zwei gleich große Hälften teilt.
+
+Er ist das 50%-Quantil.
+
+Eigenschaften:
+
+- ab ordinalem Skalenniveau sinnvoll
+- robust gegenüber Ausreißern
+
+```{r}
+daten <- c(2, 10, 4, 10, 4, 4, 5)
+median(daten, na.rm = TRUE)
+```
+
+### Median bei ungeradem n
+
+$$
+Md = x_{\frac{n+1}{2}}
+$$
+
+### Median bei geradem n
+
+$$
+Md = \frac{x_{\frac{n}{2}} + x_{\frac{n}{2}+1}}{2}
+$$
+
+Achtung:
+
+Bei ordinalen Daten wird häufig nicht sinnvoll gemittelt, sondern die mittlere Kategorie betrachtet.
+
+## 9.3 Arithmetisches Mittel
+
+$$
+\bar{x} = \frac{1}{n} \sum_{i=1}^{n} x_i
+$$
+
+Eigenschaften:
+
+- nur für metrische Daten sinnvoll
+- nutzt alle Werte
+- empfindlich gegenüber Ausreißern
+
+```{r}
+daten <- c(2, 10, 4, 10, 4, 4, 5)
+mean(daten, na.rm = TRUE)
+```
+
+# 10. Erweiterte Mittelwerte
+
+## 10.1 Gewichtetes Mittel
+
+$$
+\bar{x} = \frac{\sum \bar{x}_r \cdot n_r}{\sum n_r}
+$$
+
+oder allgemein:
+
+$$
+\bar{x}_w = \frac{\sum w_i x_i}{\sum w_i}
+$$
+
+Sinnvoll, wenn Werte oder Gruppen unterschiedlich stark gewichtet werden.
+
+```{r}
+noten <- c(1.0, 2.0, 3.0)
+credits <- c(10, 5, 5)
+
+weighted.mean(noten, credits, na.rm = TRUE)
+```
+
+## 10.2 Geometrisches Mittel
+
+$$
+GM = \sqrt[n]{\prod_{i=1}^{n} x_i}
+$$
+
+Sinnvoll bei:
+
+- Wachstumsraten
+- multiplikativen Prozessen
+- durchschnittlichen Veränderungsfaktoren
+
+Nur bei positiven Werten sinnvoll.
+
+```{r}
+gm <- function(x){
+  return( prod(x)^(1/length(x)) )
+}
+daten <- c(2, 4, 8)
+gm(daten)
+```
+
+## 10.3 Getrimmtes Mittel
+
+Beim getrimmten Mittel werden extreme Werte entfernt.
+
+$$
+\bar{x}_\text{trim}= \frac{1}{n-2k} \sum_{i=k+1}^{n-k} \cdot {x_{(i)}}
+$$
+
+Dabei gilt:
+
+$x_{(i)}$ = die sortierten Werte
+
+$k$ = Anzahl der entfernten kleinsten und größten Werte
+
+$n$ = Anzahl aller Beobachtungen
+
+Beispiel:
+
+- die kleinsten 5% und größten 5% entfernen
+- dann Mittelwert berechnen
+
+Robuster als das arithmetische Mittel.
+
+```{r}
+daten <- c(2, 10, 4, 10, 4, 4, 5)
+mean(daten, trim = 0.1, na.rm = TRUE)
+```
+
+## 10.4 Winsorisiertes Mittel
+
+Beim winsorisierten Mittel werden extreme Werte nicht entfernt, sondern durch weniger extreme Grenzwerte ersetzt.
+
+$$
+x_i < Q_{0.05} \Rightarrow x_i := Q_{0.05}, x_i > Q_{0.05} \Rightarrow x_i := Q_{0.05}
+$$
+
+Beispiel:
+
+- kleinste Werte werden auf das 5%-Quantil gesetzt
+- größte Werte werden auf das 95%-Quantil gesetzt
+
+```{r}
+x <- c(1, 2, 3, 4, 5, 100)
+
+# Quantile berechnen
+q_unten <- quantile(x, 0.05)
+q_oben  <- quantile(x, 0.95)
+
+# Winsorisieren
+x_win <- x
+
+x_win[x < q_unten] <- q_unten
+x_win[x > q_oben] <- q_oben
+
+# winsorisiertes Mittel
+mean(x_win, na.rm = TRUE)
+```
+
+# 11. Streuungsmaße
+
+Streuungsmaße beschreiben, wie stark Werte auseinanderliegen.
+
+## 11.1 Relativer Informationsgehalt (nominal)
+
+Ein Streuungsmaß für nominalskalierte Variablen.
+
+$$
+H = -\frac{1}{\ln(k)} \sum_{j=1}^{k} h_j \ln(h_j)
+$$
+
+### Interpretation
+
+- $H = 0$ → maximale Konzentration, keine Streuung (eine Kategorie enthält alle Fälle)
+- $H = 1$ → Gleichverteilung, alle Kategorien gleich häufig
+- je größer $H$, desto gleichmäßiger verteilen sich die Werte auf die Kategorien
+
+Eigenschaften:
+
+- misst Gleichverteilung vs. Konzentration
+- nur für nominale Daten sinnvoll
+
+```{r}
+x <- c("A", "A", "B", "B", "B", "C")
+p <- prop.table(table(x)) # Relative Häufigkeiten
+H <- -sum(p * log2(p)) # Shannon-Entropie
+Hmax <- log2(length(p)) # Maximale Entropie
+Hrel <- H / Hmax # Relativer Informationsgehalt
+Hrel
+```
+
+oder kompakter:
+
+```{r}
+x <- c("A", "A", "B", "B", "B", "C")
+p <- prop.table(table(x))
+-sum(p * log2(p)) / log2(length(p))
+```
+
+## 11.2 Minimum und Maximum
+
+```{r}
+daten <- c(3, 7, 12, 18, 25, 30, 45, 50, 60, 80, 100)
+range(daten, na.rm = TRUE)
+```
+
+## 11.3 Spannweite
+
+$$
+R = x_{\max} - x_{\min}
+$$
+
+Einfach, aber sehr ausreißerempfindlich.
+
+
+```{r}
+daten <- c(3, 7, 12, 18, 25, 30, 45, 50, 60, 80, 100)
+diff(range(daten, na.rm = TRUE))
+```
+
+## 11.4 Interquartilsabstand
+
+$$
+IQR = Q3 - Q1
+$$
+
+Beschreibt die Streuung der mittleren 50% der Daten.
+
+Robust gegenüber Ausreißern.
+
+```{r}
+daten <- c(3, 7, 12, 18, 25, 30, 45, 50, 60, 80, 100)
+IQR(daten, na.rm = TRUE)
+```
+
+## 11.5 Varianz
+
+Die Varianz misst die durchschnittliche quadrierte Abweichung der Werte vom Mittelwert.
+
+Große Varianz  
+
+→ starke Streuung
+
+Kleine Varianz  
+
+→ Werte liegen nahe am Mittelwert.
+
+```{r}
+daten <- c(3, 7, 12, 18, 25, 30, 45, 50, 60, 80, 100)
+var(daten, na.rm = TRUE)
+```
+
+### Varianz der Grundgesamtheit
+
+$$
+\sigma^2 = \frac{\sum (x_i - \mu)^2}{n}
+$$
+
+### Stichprobenvarianz
+
+$$
+s^2 = \frac{\sum (x_i - \bar{x})^2}{n-1}
+$$
+
+Wichtig:
+
+In vielen Statistikaufgaben wird bei Stichproben durch $n-1$ geteilt. Durch die Division durch $n-1$ wird die systematische Unterschätzung korrigiert.
+Das nennt man Bessel-Korrektur. 
+
+```r 
+var(daten)
+```
+berechnet standardmäßig $s²$, also die Stichprobenvarianz mit Division durch $n-1$.
+
+## 11.6 Standardabweichung
+
+$$
+s = \sqrt{s^2}
+$$
+
+Die Standardabweichung ist die Wurzel der Varianz.
+
+Vorteil:
+
+Sie hat wieder die ursprüngliche Einheit der Daten.
+
+```{r}
+daten <- c(3, 7, 12, 18, 25, 30, 45, 50, 60, 80, 100)
+sd(daten, na.rm = TRUE)
+```
+
+## 11.7 Mittlere absolute Abweichung vom Mittelwert
+
+$$
+\frac{1}{n} \sum_{i=1}^n |x_i - \bar{x}|
+$$
+
+```{r}
+daten <- c(3, 7, 12, 18, 25, 30, 45, 50, 60, 80, 100)
+mean(abs(daten - mean(daten, na.rm = TRUE)), na.rm = TRUE)
+```
+
+## 11.8 Median Absolute Deviation (MAD)
+
+$$
+MAD = \text{Median}(|x_i - Md|)
+$$
+
+Robustes Streuungsmaß.
+
+Achtung: In R gibt `mad(x)` standardmäßig eine **skalierte MAD** aus. Für unskaliert `constant = 1` hinzufügen
+
+```{r}
+daten <- c(3, 7, 12, 18, 25, 30, 45, 50, 60, 80, 100)
+mad(daten, na.rm = TRUE)
+```
+
+## 11.9 Variationskoeffizient
+
+$$
+v = \frac{s}{\bar{x}}
+$$
+
+oder in Prozent:
+
+$$
+v \cdot 100
+$$
+
+Eigenschaften:
+
+- relatives Streuungsmaß
+- einheitenfrei
+- sinnvoll bei verhältnisskalierten Daten
+- problematisch, wenn $\bar{x}$ nahe 0 ist
+
+```{r}
+x <- c(2, 4, 6, 8, 10)
+
+sd(x, na.rm = TRUE) / mean(x, na.rm = TRUE)
+
+100 * sd(x, na.rm = TRUE) / mean(x, na.rm = TRUE)
+```
+
+# 12. Quantile, Perzentile und Prozentrang
+
+## Achtung bei der Berechnung
+
+Quantile können je nach Konvention unterschiedlich berechnet werden.
+
+In R gibt es beim Befehl `quantile()` verschiedene Berechnungstypen.
+
+## 12.1 Quantile
+
+Ein p-Quantil ist ein Wert, unter dem ungefähr der Anteil $p$ der Daten liegt.
+
+Beispiele:
+
+- Median = 0.50-Quantil
+- Q1 = 0.25-Quantil
+- Q3 = 0.75-Quantil
+
+```{r}
+daten <- c(3, 7, 12, 18, 25, 30, 45, 50, 60, 80, 100)
+quantile(daten, probs = c(0.3, 0.6, 0.9), na.rm = TRUE)
+quantile(daten, 0.4, na.rm = TRUE) # beliebiges Quantil
+```
+
+## 12.2 Quartile
+
+Quartile teilen Daten in vier Teile:
+
+- Q1: 25%
+- Q2: 50% = Median
+- Q3: 75%
+
+```{r}
+daten <- c(3, 7, 12, 18, 25, 30, 45, 50, 60, 80, 100)
+quantile(daten, na.rm = TRUE)
+```
+
+## 12.3 Dezile
+
+Dezile teilen Daten in zehn Teile.
+
+## 12.4 Perzentile
+
+Perzentile teilen Daten in hundert Teile.
+
+## 12.5 Prozentrang
+
+Der Prozentrang gibt an, wie viel Prozent der Werte kleiner oder gleich einem bestimmten Wert sind.
+
+Beispiel:
+
+Ein Prozentrang von 78 bedeutet:
+78% der Werte liegen unterhalb oder bis zu diesem Wert.
+
+Ergänzung: 
+
+Prozentrang (formal)
+
+Bei nicht verbundenen Rängen:
+
+$$
+PR_i = \frac{R_i}{n} \cdot 100
+$$
+
+```{r}
+daten <- c(3, 7, 12, 18, 25, 30, 45, 50, 60, 80, 100)
+ecdf(daten)(77)
+100 * ecdf(daten)(77)
+```
+→ berechnet die empirische Verteilungsfunktion an der Stelle: $x=77$
+
+Die empirische Verteilungsfunktion ist definiert als:
+
+$$
+F_n(x) := \frac{ \text{Anzahl der Beobachtungswerte in der Stichprobe} \leq x}{n} = \frac{1}{n} \sum_{i=1}^n \mathbf{1}_{(-\infty,x)}(x_i)
+$$
+
+## 12.6 Rangbindungen
+
+Bei gleichen Werten:
+
+- Mittelwert der Rangplätze bilden
+- diesen Rang allen zuweisen
+
+Beispiel:
+
+Ränge 2, 3, 4 → alle werden zu 3
+
+```{r}
+x <- c(10, 20, 20, 30)
+rank(x) # standardmäßig Mittelwert [ties.method = "average"
+rank(x, ties.method = "min") # kleinster Rang
+rank(x, ties.method = "max") # größter Rang
+rank(x, ties.method = "first") # Reighenfolge des Auftretens
+rank(x, ties.method = "random") # Zufällig auflösenken
+```
+
+# 13. Verteilungen
+
+## 13.1 Symmetrische Verteilung
+
+Bei einer ideal symmetrischen unimodalen Verteilung gilt:
+
+$$
+\bar{x} = Md = Mo
+$$
+
+```{r}
+library(psych)
+x <- c(1,2,3,4,5,6,7)
+skew(x)
+```
+
+Schiefe nahe 0
+
+## 13.2 Rechtsschiefe Verteilung
+
+- langer Ausläufer nach rechts
+- wenige hohe Werte ziehen den Mittelwert nach rechts
+- typischerweise:
+
+$$
+\bar{x} > Md > Mo
+$$
+
+```{r}
+library(psych)
+x <- c(1,2,2,3,3,4,20)
+skew(x)
+```
+
+Schiefe größer 0
+
+## 13.3 Linksschiefe Verteilung
+
+- langer Ausläufer nach links
+- wenige niedrige Werte ziehen den Mittelwert nach links
+- typischerweise:
+
+$$
+\bar{x} < Md
+$$
+
+```{r}
+library(psych)
+x <- c(-20,1,2,3,3,4,4)
+skew(x)
+```
+
+Schiefe kleiner 0
+
+### Merksatz
+
+Der Mittelwert wird in Richtung des langen Ausläufers gezogen.
+
+
+
+## 13.4 Kurtosis
+
+Kurtosis beschreibt die Form einer Verteilung im Vergleich zur Normalverteilung.
+
+## 13.5 Exzess
+
+Häufig wird der Exzess betrachtet:
+
+$$
+\text{Exzess} = \text{Kurtosis} - 3
+$$
+
+### Interpretation
+
+| Exzess | Bedeutung | Begriff |
+|:---:|:---:|:---:|
+| 0 | ähnlich Normalverteilung | |
+| > 0 | eher spitz / schwere Ränder | Leptokurtisch |
+| < 0 | eher flach / leichte Ränder | Platykurtisch |
+
+Achtung:
+
+Kurtosis bedeutet nicht einfach nur „spitz“ oder „flach“, sondern hängt stark mit der Verteilung in den Rändern zusammen.
+
+```{r} 
+x <- c(4.8,4.9,5,5,5,5.1,5.2,20)
+kurtosi(x) # Leptokurtisch
+y <- c(1,2,3,4,5,6,7,8,9,10)
+kurtosi(y) # Platykurtisch
+
+```
+
+Berechnet den Exzess der Verteilung.
+
+
+## Gesamtübersicht
+
+```r 
+library(psych)
+describe(x)
+```
+→ viele Kennwerte auf einmal
+
+# 14. Z-Transformation
+
+$$
+z = \frac{x - \bar{x}}{s}
+$$
+
+## 14.1 Bedeutung
+
+Ein z-Wert gibt an, wie viele Standardabweichungen ein Wert vom Mittelwert entfernt liegt.
+
+## Eigenschaften
+
+Nach der Z-Transformation gilt:
+
+$$
+\bar{z} = 0
+$$
+
+$$
+s_z = 1
+$$
+
+Die Form der Verteilung bleibt erhalten. Schiefe, Ausreißer und Kurtosis verändern sich nicht. Die z-Transformation standadisiert, aber normalisiert nicht die Verteilungsform.
+
+## 14.2 Interpretation
+
+- $z = 1$: eine Standardabweichung über dem Mittelwert
+- $z = -2$: zwei Standardabweichungen unter dem Mittelwert
+
+```{r}
+daten <- c(10, 12, 15, 20, 25)
+scale(daten)
+```
+
+# 15. Bedingte Kennwerte
+
+Bedingte Kennwerte sind Kennwerte innerhalb von Teilgruppen.
+
+Beispiel:
+
+Mittelwert von X getrennt nach Gruppen von Y.
+
+## 15.1 Zweck
+
+Man untersucht, wie sich eine Variable abhängig von einer anderen Variable verhält.
+
+## 15.2 Darstellung
+
+Numerisch:
+
+- Gruppierte Mittelwerte
+- Gruppierte Mediane
+- Gruppierte Standardabweichungen
+
+Grafisch:
+
+- Mittelwertdiagramm
+- Boxplots nach Gruppen
+- Balkendiagramme
+
+## Wichtig
+
+Nicht nur den Gesamtmittelwert betrachten, sondern Gruppenunterschiede prüfen.
+
+## Übersicht Kennwerte je Gruppe
+
+```{r}
+library(psych)
+
+x <- c(3,5,7,10,12,15)
+gruppe <- c("A","A","A","B","B","B")
+
+describeBy(x, gruppe)
+```
+
+## Spezifischer Kennwert nach Gruppe
+
+```{r}
+x <- c(3,5,7,10,12,15)
+gruppe <- c("A","A","A","B","B","B")
+
+by(x, INDICES = gruppe, FUN = mean, na.rm = TRUE)
+```
+
+## Subsetting
+
+### Werte einer Gruppe auswählen
+
+```{r}
+gruppe <- c("A", "B", "A", "C")
+x <- c(10, 20, 30, 40)
+
+x[gruppe == "A"]
+```
+
+→ gibt alle Werte aus `x` zurück, bei denen die Gruppe `"A"` ist
+
+### Zeilen aus Dataframe filtern
+
+```{r}
+df <- data.frame(
+  name = c("Anna", "Ben", "Clara"),
+  alter = c(21, 25, 19)
+)
+
+df[df$alter != 25, ]
+```
+
+→ gibt alle Zeilen zurück, bei denen `alter` nicht 25 ist
+
+
+# 16. Kovarianz
+
+Die Kovarianz beschreibt, ob zwei Variablen gemeinsam variieren.
+
+$$
+\text{cov}(x,y) = \frac{1}{n} \sum (x_i - \bar{x})(y_i - \bar{y})
+$$
+
+Bei Stichproben häufig:
+
+$$
+\text{cov}(x,y) = \frac{1}{n-1} \sum (x_i - \bar{x})(y_i - \bar{y})
+$$
+
+## Interpretation
+
+Für jeden Fall wird betrachtet:
+
+$$
+(x_i - \bar{x})(y_i - \bar{y})
+$$
+
+- beide Werte über dem Mittelwert → positiv
+- beide Werte unter dem Mittelwert → positiv
+- einer über, einer unter dem Mittelwert → negativ
+
+## Problem
+
+Die Kovarianz hängt von den Einheiten der Variablen ab.
+
+Deshalb ist sie schwer direkt interpretierbar.
+
+```{r}
+x <- c(1, 2, 3, 4, 5)
+y <- c(2, 4, 6, 8, 10)
+
+cov(x, y)
+```
+
+# 17. Zusammenhangsmaße nach Skalenniveau
+
+| Variable X | Variable Y | geeignetes Maß |
+|---|---|---|
+| metrisch | metrisch | Pearson-r |
+| ordinal | ordinal | Spearman-Rho / Kendall-Tau |
+| dichotom | dichotom | Phi-Koeffizient |
+| nominal | nominal | Kontingenzmaße, z.B. Cramérs V, Chi-Quadrat |
+| metrisch | dichotom | punktbiseriale Korrelation / Gruppenvergleich |
+
+# 18. Korrelation ≠ Kausalität
+
+Korrelation bedeutet nicht automatisch Ursache.
+
+## Drei mögliche Erklärungen
+
+1. X verursacht Y  
+2. Y verursacht X  
+3. Eine Drittvariable Z beeinflusst X und Y  
+
+## Für Kausalität braucht man mindestens
+
+- Korrelation
+- zeitliche Präzedenz
+- Ausschluss plausibler Drittvariablen
+
+# 19. Korrelationsmatrix
+
+Eine Korrelationsmatrix zeigt die Korrelationen mehrerer Variablen untereinander.
+
+Eigenschaften:
+
+- Diagonale = 1
+- symmetrisch
+- jede Variable wird mit jeder anderen korreliert
+
+Beispiel:
+
+|  | X | Y | Z |
+|---|---:|---:|---:|
+| X | 1 | $r_{xy}$ | $r_{xz}$ |
+| Y | $r_{yx}$ | 1 | $r_{yz}$ |
+| Z | $r_{zx}$ | $r_{zy}$ | 1 |
+
+
+# 20. Pearson-Korrelation
+
+Die Pearson-Korrelation standardisiert die Kovarianz.
+
+$$
+r = \frac{\text{cov}(x,y)}{s_x \cdot s_y}
+$$
+
+Alternative Sichtweise mit z-Werten:
+
+$$
+r = \frac{1}{n} \sum z_x z_y
+$$
+
+Bei Stichproben je nach Definition entsprechend mit $n-1$.
+
+```{r}
+x <- c(1, 2, 3, 4, 5)
+y <- c(2, 4, 6, 8, 10)
+
+cor(x, y, use = "pairwise.complete.obs")
+```
+
+## Wertebereich
+
+$$
+-1 \le r \le 1
+$$
+
+| r | Bedeutung |
+|---:|---|
+| +1 | perfekt positiver linearer Zusammenhang |
+| 0 | kein linearer Zusammenhang |
+| -1 | perfekt negativer linearer Zusammenhang |
+
+## Richtung
+
+- positiv: hohe X-Werte gehen mit hohen Y-Werten einher
+- negativ: hohe X-Werte gehen mit niedrigen Y-Werten einher
+
+## Stärke
+
+Je näher $|r|$ an 1 liegt, desto stärker der lineare Zusammenhang.
+
+## Cohen-Konvention
+
+| Betrag von r | Interpretation |
+|---:|---|
+| 0.1 | schwach |
+| 0.3 | mittel |
+| 0.5 | stark |
+
+Achtung:
+
+Das sind Faustregeln, keine Naturgesetze. Einfach vom Mensch mal festgelegt.
+
+## Korrelation in R
+
+```{r}
+df <- data.frame(
+  x = c(1, 2, 3, 4, 5),
+  y = c(2, 4, 6, 8, 10),
+  z = c(5, 3, 6, 2, 7)
+)
+
+cor(df[, c("x", "y", "z")],
+    use = "pairwise.complete.obs")
+```
+
+→ berechnet die Korrelationen zwischen mehreren Variablen
+
+### Bedeutung von `use = "pairwise.complete.obs"`
+
+- fehlende Werte (`NA`) werden paarweise ausgeschlossen
+- jede Korrelation nutzt alle verfügbaren gültigen Wertepaare
+
+
+# 21. Voraussetzungen und Probleme bei Pearson-r
+
+## Voraussetzungen
+
+- metrische Variablen
+- linearer Zusammenhang
+- keine extremen Ausreißer
+- sinnvoll interpretierbare Streuung
+
+## Probleme
+
+### Ausreißer
+
+Ausreißer können r stark erhöhen, senken oder sogar die Richtung verändern.
+
+### Varianzeinschränkung
+
+Wenn die Werte nur in einem kleinen Bereich variieren, wird r oft kleiner.
+
+Beispiel:
+
+Nur 10- bis 13-Jährige statt 6- bis 16-Jährige.
+
+### Heterogene Gruppen
+
+Gemischte Gruppen können Zusammenhänge verfälschen.
+
+Beispiel:
+
+Wenn Männer und Frauen zusammen analysiert werden, obwohl die Muster getrennt verschieden sind.
+
+
+# 22. Partialkorrelation
+
+Die Partialkorrelation misst den Zusammenhang zwischen X und Y, nachdem der Einfluss einer Drittvariable Z herausgerechnet wurde.
+
+$$
+r_{xy.z} =
+\frac{r_{xy} - r_{xz}r_{yz}}
+{\sqrt{1-r_{xz}^2}\sqrt{1-r_{yz}^2}}
+$$
+
+```{r}
+x <- c(1,2,3,4,5)
+y <- c(2,4,5,4,5)
+z <- c(5,4,3,2,1)
+
+# normale Korrelationen
+r_xy <- cor(x, y)
+r_xz <- cor(x, z)
+r_yz <- cor(y, z)
+
+# Partialkorrelation
+(r_xy - r_xz * r_yz) /
+sqrt((1 - r_xz^2) * (1 - r_yz^2))
+```
+
+## Interpretation
+
+- Partialkorrelation deutlich kleiner als einfache Korrelation:
+  Drittvariable erklärt einen Teil des Zusammenhangs.
+
+- Partialkorrelation ähnlich groß:
+  Drittvariable spielt für diesen Zusammenhang kaum eine Rolle.
+
+# 23. Kreuztabelle
+
+|  | B = ja | B = nein |
+|---|---:|---:|
+| A = ja | a | b |
+| A = nein | c | d |
+
+## Zeilenprozente
+
+Zeilenprozente vergleichen innerhalb der Zeilen.
+
+## Spaltenprozente
+
+Spaltenprozente vergleichen innerhalb der Spalten.
+
+## Gesamtprozente
+
+Gesamtprozente beziehen sich auf alle Fälle.
+
+## absolute Kreuztabelle
+
+```{r}
+x <- c(1, 2, 3, 4, 5)
+y <- c(2, 4, 6, 8, 10)
+
+table(x, y)
+```
+
+## relative Anteile
+
+```{r}
+x <- c(1, 2, 3, 4, 5)
+y <- c(2, 4, 6, 8, 10)
+
+prop.table(table(x, y))
+```
+
+## Ausführliche Kreuztabelle mit gmodels
+
+```r 
+CrossTable(x, y, prop.chisq = FALSE)
+```
+
+
+# 24. Dichotome Variablen und Phi-Koeffizient
+
+
+
+## Phi-Koeffizient
+
+$$
+\phi =
+\frac{ad - bc}
+{\sqrt{(a+b)(c+d)(a+c)(b+d)}}
+$$
+
+Der Phi-Koeffizient ist für zwei dichotome Variablen geeignet.
+
+Wertebereich:
+- -1 bis +1
+
+## Über Kontigenztafel
+
+```{r}
+library(psych)
+
+x <- c(1,1,1,0,0,0)
+y <- c(1,1,0,1,0,0)
+
+phi(table(x, y))
+```
+
+## in R manuell
+
+```{r}
+tab <- matrix(c(10, 5,
+                3, 12),
+              nrow = 2)
+
+a <- tab[1,1]
+b <- tab[1,2]
+c <- tab[2,1]
+d <- tab[2,2]
+
+(ad <- a*d)
+bc <- b*c
+
+(ad - bc) /
+sqrt((a+b)*(c+d)*(a+c)*(b+d))
+```
+
+# 25. Ordinale Zusammenhangsmaße / Rangkorrelation
+
+## Spearman-Rho
+
+Spearman-Rho ist eine Korrelation der Rangplätze.
+
+Geeignet für:
+
+- ordinale Daten
+- monotone Zusammenhänge
+
+```{r}
+daten <- data.frame(
+  x = c(1,2,3,4,5),
+  y = c(2,4,6,8,10)
+)
+
+cor(x, y, method = "spearman", use = "pairwise.complete.obs")
+```
+
+## Kendall-Tau
+
+Kendall-Tau basiert auf Paarvergleichen.
+
+Es betrachtet:
+
+- gleichgerichtete Paare
+- gegenläufige Paare
+
+Begriffe:
+
+- Proversionen: gleichgerichtete Rangpaare
+- Inversionen: gegenläufige Rangpaare
+
+Kendall-Tau ist oft robuster und gut bei kleinen Stichproben oder vielen Bindungen.
+
+```{r}
+daten <- data.frame(
+  x = c(1,2,3,4,5),
+  y = c(2,4,6,8,10)
+)
+
+cor(x, y, method = "kendall", use = "pairwise.complete.obs")
+```
+
+# 26. Regression
+
+**Regression dient der Vorhersage einer abhängigen Variable Y durch eine unabhängige Variable X.**
+
+- Korrelation misst Zusammenhang
+- Regression nutzt Zusammenhang zur Vorhersage
+
+Je stärker die Korrelation, desto besser die Vorhersage.
+
+## Begriffe
+
+- Y = Kriterium / abhängige Variable
+- X = Prädiktor / unabhängige Variable
+
+## Regressionsgerade
+
+$$
+\hat{y} = b x + a
+$$
+
+oder:
+
+$$
+\hat{y} = a + bx
+$$
+
+
+
+## lineares Regressionsmodell
+
+```{r}
+df <- data.frame(
+  x = c(1,2,3,4,5),
+  y = c(2,4,5,4,5)
+)
+
+# y wird durch x vorhergesagt
+lm(y ~ x, data = df)
+```
+
+## Modellzusammenfassung
+
+```{r}
+df <- data.frame(
+  x = c(1,2,3,4,5),
+  y = c(2,4,5,4,5)
+)
+
+# y wird durch x vorhergesagt
+summary(lm(y ~ x, data = df))
+```
+
+## Regressionskoeffizienten gezielt ausgeben
+
+```{r}
+df <- data.frame(
+  x = c(1,2,3,4,5),
+  y = c(2,4,5,4,5)
+)
+
+# y wird durch x vorhergesagt
+coef(summary(lm(y ~ x, data = df)))
+```
+
+## Interpretation
+
+### Steigung b / Regressionsgewicht
+
+$$
+b = \frac{\text{cov}(x,y)}{s_x^2}
+$$
+
+b bedeutet:
+
+> Wenn X um 1 Einheit steigt, verändert sich die vorhergesagte Variable Y im Mittel um b Einheiten.
+
+Ein b-Gewicht gibt an, um wie viele Einheiten sich Y verändert, wenn X um eine Einheit steigt.
+
+- positives b → Y steigt mit X 
+- negatives b → Y sinkt mit X 
+
+### Achsenabschnitt a / Intercept
+
+$$
+a = \bar{y} - b \cdot \bar{x}
+$$
+
+a bedeutet:
+
+> Vorhergesagter Y-Wert, wenn X = 0 ist.
+
+Achtung:
+
+a ist nur sinnvoll interpretierbar, wenn X = 0 inhaltlich sinnvoll ist.
+
+
+## Beta-Gewichte
+
+Beta-Gewichte sind standardisierte Regressionsgewichte.
+
+Sie ermöglichen den Vergleich der relativen Bedeutung verschiedener Prädiktoren.
+
+```{r}
+library(lm.beta)
+
+df <- data.frame(
+  x = c(1,2,3,4,5),
+  y = c(2,4,5,4,5)
+)
+modell <- lm(y ~ x, data = df)
+
+lm.beta(modell)
+```
+
+### Interpretation
+
+- positives Beta
+  → positiver Zusammenhang
+
+- negatives Beta
+  → negativer Zusammenhang
+
+# 27. Vorhersagefehler und Kleinste Quadrate
+
+## Vorhersagewert
+
+$\hat{y}$ ist der durch das Regressionsmodell vorhergesagte Wert
+
+```{r}
+df <- data.frame(
+  x = c(1,2,3,4,5),
+  y = c(2,4,5,4,5)
+)
+
+modell <- lm(y ~ x, data = df)
+
+predict(modell)
+# oder 
+fitted(modell)
+```
+
+## Fehler / Residuum
+
+$$
+e = y - \hat{y}
+$$
+
+Das Residuum ist der Unterschied zwischen beobachtetem und vorhergesagtem Wert.
+
+```{r}
+df <- data.frame(
+  x = c(1,2,3,4,5),
+  y = c(2,4,5,4,5)
+)
+
+modell <- lm(y ~ x, data = df)
+
+resid(modell)
+```
+
+## Beobachtete vs. vorhergesagte Werte
+
+```{r}
+data.frame(
+  beobachtet = df$y,
+  vorhergesagt = fitted(modell),
+  residuum = resid(modell)
+)
+```
+
+## Residuenplot
+
+```{r}
+plot(fitted(modell),
+     resid(modell))
+
+abline(h = 0, col = "red")
+```
+
+## Kleinste-Quadrate-Prinzip
+
+$$
+\sum (y - \hat{y})^2 \rightarrow \min
+$$
+
+Die Regressionsgerade wird so gewählt, dass die Summe der quadrierten Fehler minimal ist.
+
+# 28. Zusammenhang zwischen Regression und Korrelation
+
+$$
+b = r \cdot \frac{s_y}{s_x}
+$$
+
+## Interpretation
+
+- Bei positivem r ist b positiv.
+- Bei negativem r ist b negativ.
+- Je stärker r, desto stärker die lineare Vorhersage.
+
+# 29. Z-standardisierte Regression
+
+Wenn X und Y z-standardisiert sind:
+
+$$
+\hat{z}_y = \beta z_x
+$$
+
+Bei einfacher Regression gilt:
+
+$$
+\beta = r
+$$
+
+und:
+
+$$
+a = 0
+$$
+
+Das bedeutet:
+Bei z-standardisierten Variablen ist das Regressionsgewicht gleich der Korrelation.
+
+# 30. Determinationskoeffizient ($R²$)
+
+$$
+R^2 = r^2
+$$
+
+bei einfacher Regression.
+
+## Bedeutung
+
+$R^2$ ist der Anteil erklärter Varianz.
+
+Beispiel:
+
+$$
+r = 0.7
+$$
+
+$$
+r^2 = 0.49
+$$
+
+Interpretation:
+49% der Varianz von Y werden durch X erklärt.
+
+```{r}
+x <- c(1, 2, 3, 4, 5)
+y <- c(2, 4, 6, 8, 10)
+
+cor(x, y, use = "pairwise.complete.obs")^2 
+```
+
+
+**Typischer Klausurfehler**
+
+
+Falsch:
+
+> $r = 0.6$ bedeutet 60% erklärte Varianz.
+
+Richtig:
+
+> $r^2 = 0.36$, also 36% erklärte Varianz.
+
+# 31. Erklärte Varianz und Fehlervarianz / Residualvarianz
+
+$$
+R^2 = \frac{\text{erklärte Varianz}}{\text{Gesamtvarianz}}
+$$
+
+konkret:
+
+$$
+R^2 = \frac{s_{{\hat{y}}^2}}{s_{y^2}}
+$$
+
+## Zerlegung
+
+Gesamtvarianz =
+
+- erklärte Varianz
+- nicht erklärte Varianz / Fehlervarianz
+
+# 32. Standardfehler der Schätzung
+
+$$
+s_e = s_y \cdot \sqrt{1-r^2}
+$$
+
+```{r}
+summary(modell)$sigma
+```
+
+```{r}
+# manuelle Berechnung (leicht abweichende Werte, da n-1, statt n-2 Freiheitsgrade)
+sd(df$y) * sqrt(1 - cor(df$x, df$y)^2)
+```
+
+## Bedeutung
+
+Der Standardfehler der Schätzung beschreibt die typische Größe der Vorhersagefehler.
+
+Je kleiner $s_e$, desto besser die Vorhersage.
+
+# 33. Multiple Regression
+
+Bei multipler Regression wird Y durch mehrere Prädiktoren vorhergesagt.
+
+$$
+\hat{y} = a + b_1x_1 + b_2x_2 + \dots + b_kx_k
+$$
+
+- $a$ = Intercept / Achsenabschnitt
+- $b_i$ = Regressionsgewicht des jeweiligen Prädiktors
+
+```{r}
+df <- data.frame(
+  y  = c(2,4,5,4,5),
+  x1 = c(1,2,3,4,5),
+  x2 = c(5,4,3,2,1)
+)
+
+modell <- lm(y ~ x1 + x2, data = df)
+
+summary(modell)
+```
+
+## b-Gewichte
+
+Ein b-Gewicht gibt an,
+um wie viele Einheiten sich Y verändert,
+wenn der betreffende Prädiktor um 1 Einheit steigt
+und alle anderen Prädiktoren konstant gehalten werden.
+
+## standardisierte Beta-Gewichte
+
+Vergleich der relativen Wichtigkeit der Prädiktoren
+
+## Adjustiertes $R^2$
+
+```{r}
+summary(modell)$adj.r.squared
+```
+
+Das adjustierte $R^2$ berücksichtigt die Anzahl der Prädiktoren.
+
+
+## Redundanz / Multikollinearität
+
+Redundanz liegt vor, wenn mehrere Prädiktoren ähnliche Information liefern.
+
+Problem:
+
+- instabile b-Gewichte
+- schwierige Interpretation
+- große Standardfehler
+
+## Suppressoreffekt
+
+Ein Suppressor kann die Vorhersage verbessern, obwohl er selbst nur schwach mit Y korreliert.
+
+Er entfernt irrelevante Varianz aus anderen Prädiktoren.
+
+Dadurch kann:
+
+- $R^2$ steigen
+- ein anderer Prädiktor stärker werden
+
+## Multikollinearität prüfen
+
+```{r}
+df <- data.frame(
+  y  = c(2,4,5,4,5),
+  x1 = c(1,2,3,4,5),
+  x2 = c(5,4,3,2,1)
+)
+cor(df)
+```
+
+# 34. Regression vs. Korrelation
+
+| Korrelation | Regression |
+|---|---|
+| ungerichtet | gerichtet |
+| misst Zusammenhang | dient Vorhersage |
+| symmetrisch: r(X,Y) = r(Y,X) | X sagt Y vorher |
+| keine Unterscheidung zwischen X und Y | Prädiktor und Kriterium wichtig |
+| keine kausale Richtung | gerichtetes Vorhersagemodell |
+
+
+# 35. Typische Interpretationsformulierungen
+
+## Korrelation
+
+> Es besteht ein mittlerer positiver linearer Zusammenhang zwischen X und Y.
+
+## Korrelation mit r
+
+> Es besteht ein mittlerer positiver linearer Zusammenhang zwischen X und Y, $r = .30$.
+
+## Determinationskoeffizient
+
+> $r^2 = .25$ bedeutet, dass 25% der Varianz von Y durch X erklärt werden können.
+
+oder 
+
+> Das Modell erklärt 25% der Varianz von Y. 
+
+## Regression
+
+> Wenn X um eine Einheit steigt, steigt/fällt der vorhergesagte Wert von Y im Mittel um b Einheiten.
+
+## Multiple Regression
+
+> Unter Kontrolle der übrigen Prädiktoren steigt/fällt der vorhergesagte Wert von Y um $b$ Einheiten, wenn der betreffende Prädiktor um eine Einheit steigt.
+

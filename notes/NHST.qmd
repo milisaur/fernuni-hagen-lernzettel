@@ -1,0 +1,4961 @@
+---
+title: Inferenzstatistik & NHST
+author: "Emilian Hahlbrock"
+date: "2026-06-10"
+version: "v1.0"
+license: "CC BY-NC-SA 4.0"
+format:
+  html:
+    toc: true
+    code-fold: show
+    code-summary: "R-Code anzeigen"
+editor: 
+  markdown: 
+    wrap: 72
+---
+
+# Inferenzstatistik und NHST
+
+> Version: v1.0 Letzte Aktualisierung: 01.06.2026
+
+```{r echo=FALSE}
+system("git log -1 --date=short --format='%cd'", intern = TRUE)
+```
+
+## Öffentliche Beispieldaten für alle Beispiele
+
+Die folgenden Beispiele verwenden keine Uni-Datensätze, sondern einen
+reproduzierbaren synthetischen Datensatz. Dadurch kann der Lernzettel
+öffentlich geteilt werden.
+
+```{r}
+set.seed(123)
+
+demo <- data.frame(
+  gruppe = rep(c("Kontrolle", "Intervention"), each = 40),
+  score = c(
+    rnorm(40, mean = 100, sd = 15),
+    rnorm(40, mean = 108, sd = 15)
+  )
+)
+
+head(demo)
+```
+
+Zusätzlich werden einzelne öffentliche R-Datensätze genutzt:
+
+```{r}
+data(mtcars)
+data(PlantGrowth)
+```
+
+```{r}
+head(mtcars)
+head(PlantGrowth)
+```
+
+# 1. Grundidee der Inferenzstatistik
+
+## Ziel
+
+Von **Stichprobe → Population** schließen
+
+## Problem
+
+- Stichproben sind zufällig verzerrt\
+- Ergebnisse schwanken\
+- Stichprobe ≠ Population → Stichprobenfehler
+
+## Warum funktioniert es trotzdem?
+
+- Stichprobenwerte streuen **systematisch um den wahren Wert**
+- richtige Werte treten häufiger auf als extreme
+
+## Lösung
+
+- Wahrscheinlichkeitstheorie\
+- Stichprobenverteilungen\
+- Konfidenzintervalle\
+- Signifikanztests
+
+# 2. Grundbegriffe
+
+## Population vs. Stichprobe
+
+- Population = Gesamtheit aller Fälle\
+- Stichprobe = Teilmenge
+
+## Parameter vs. Statistik
+
+| Population       | Stichprobe            |
+|------------------|-----------------------|
+| $\mu, \sigma, p$ | $\bar{x}, s, \hat{p}$ |
+
+→ Statistik = Schätzung eines Parameters
+
+## Stichprobentypen
+
+- unabhängig → getrennte Gruppen\
+- abhängig → Messwiederholung / Paare
+
+abhängig → geringere Varianz → höhere Power
+
+# 3. Wahrscheinlichkeit
+
+## Subjektive Wahrscheinlichkeit
+
+- persönliche Einschätzung
+- Erfahrung / Intuition
+
+## Klassische Wahrscheinlichkeit
+
+$$P(A) = \frac{\text{günstige Fälle}}{\text{mögliche Fälle}}$$
+
+z.B. Würfel, Münze
+
+## Frequentistische Wahrscheinlichkeit
+
+- basiert auf relativen Häufigkeiten
+- Grundlage der Inferenzstatistik
+
+## Relative Häufigkeit
+
+$$P(A) = \frac{n(A)}{n}$$
+
+## Konjunktion
+
+$$P(A \cap B)$$
+
+→ Wahrscheinlichkeit, dass A und B gemeinsam auftreten
+
+Wichtig:
+
+$$P(A \cap B) \le P(A)
+P(A \cap B) \le P(B)$$
+
+## Bedingte Wahrscheinlichkeit
+
+$$P(A|B) = \frac{P(A \cap B)}{P(B)}$$
+
+## Unabhängigkeit
+
+$$P(A|B) = P(A)$$
+
+## Produktregel
+
+$$P(A \cap B) = P(A) \cdot P(B)$$
+
+→ gilt **nur bei Unabhängigkeit**
+
+# 4. Stichprobenverteilung
+
+## Definition
+
+Verteilung einer Statistik über viele Stichproben
+
+## Empirische Stichprobenverteilung
+
+- entsteht durch Simulation / viele Ziehungen
+
+## Theoretische Stichprobenverteilung
+
+- mathematisch hergeleitet
+- Grundlage für Konfidenzintervalle und Signifikanztest
+
+## Erwartungswert
+
+$$E(\bar{x}) = \mu$$
+
+→ unverzerrter Schätzer / unbiased estimator, da langfristiger
+Durchschnitt aller möglichen Stichprobenmittelwerte
+
+### Eigenschaften guter Schätzer
+
+**Unverzerrtheit**
+
+Ein Schätzer ist unverzerrt, wenn sein Erwartungswert genau dem wahren
+Parameter entspricht:
+
+$$E(\hat{\theta}) = \theta$$
+
+→ trifft im Mittel den wahren Parameter
+
+**Konsistenz**
+
+Ein Schätzer ist konsistent, wenn er mit wachsendem Stichprobenumfang
+immer näher am wahren Parameter liegt.
+
+$$n \uparrow \Rightarrow \hat{\theta} \rightarrow \theta$$
+
+→ größere Stichprobe = bessere Schätzung
+
+## Varianz & Standardfehler
+
+Varianz der Stichprobenverteilung des Mittelwertes:
+$$\text{Var}(\bar{X}) = \frac{\sigma^2}{n}$$
+
+------------------------------------------------------------------------
+
+Standardfehler des Mittelwertes, wenn $\sigma$ bekannt:
+$$SE_{\bar{x}} = \frac{\sigma}{\sqrt{n}}$$
+
+------------------------------------------------------------------------
+
+Da $\sigma$ in der Praxis meist nicht bekannt, verwendet man:
+$$SE_{\bar{x}} = \frac{s}{\sqrt{n}}$$
+
+```{r}
+# Mit einzelnen Werten
+x <- c(12, 15, 18, 20, 25)
+
+sd(x) / sqrt(length(x))
+```
+
+→ berechnet den Standardfehler der Werte in `x`
+
+```{r}
+# Mit Datensatz
+sd(mtcars$mpg) / sqrt(length(mtcars$mpg))
+```
+
+→ berechnet den Standardfehler des Mittelwerts der Variable `mpg`
+(Meilen pro Gallone) aus dem Datensatz `mtcars`
+
+Standardfehler eines Anteils, praktisch nutzt man oft $\hat{p}$, statt
+$p$, weil der wahre Anteil unbekannt ist:
+
+$$SE_{\hat{p}} = \sqrt{\frac{\hat{p}(1-\hat{p})}{n}}$$
+
+------------------------------------------------------------------------
+
+### Zusammenhang der Schreibweisen
+
+Der Standardfehler entspricht der geschätzten Standardabweichung der
+Stichprobenverteilung. Deshalb werden häufig beide Schreibweisen
+verwendet:
+
+$$SE_{\bar{X}} = \hat{\sigma}_{\bar{X}} = \frac{s}{\sqrt{n}}$$
+
+### Formal
+
+Die theoretische Standardabweichung der Stichprobenverteilung wäre:
+
+$$\sigma_{\bar{X}} = \frac{\sigma}{\sqrt{n}}$$
+
+Da $\sigma$ unbekannt ist, schätzt man:
+
+$$\hat{\sigma}_{\bar{X}} = \frac{s}{\sqrt{n}}$$
+
+Und genau das nennt sich:
+
+$$SE_{\bar{X}} = \frac{s}{\sqrt{n}}$$
+
+## Bedeutung des Standardfehlers
+
+- Streuung der **Stichprobenverteilung**, nicht der Daten\
+- misst die **Unsicherheit des Schätzers**\
+- bestimmt die Breite von Konfidenzintervallen
+
+## Konsequenzen
+
+- $n \uparrow \Rightarrow SE \downarrow \Rightarrow \text{präziser}$
+
+→ größere Stichproben liefern präzisere Schätzungen
+
+- $\sigma \uparrow \Rightarrow SE \uparrow$
+
+→ stärkere Datenstreuung erhöht die Unsicherheit
+
+### Reminder Standardabweichung vs. Standardfehler:
+
+Standardabweichung = Streuung der Daten
+
+Standardfehler = Streuung der Stichprobenstatistik bzw. des Schätzers
+(gemeint ist Mittelwert, Anteil, Regressionskoeffizent, etc.)
+
+$n \uparrow \Rightarrow SE \downarrow$ → SD wird darurch nicht
+automatisch kleiner
+
+Die Daten selbst streuen weiterhin gleich stark.
+
+Nur die Unsicherheit der Schätzung sinkt.
+
+# 5. Zentrale Sätze
+
+## Gesetz der großen Zahlen
+
+Mit wachsendem Stichprobenumfang nähert sich der Stichprobenmittelwert
+dem wahren Populationsmittelwert an.
+
+$$\bar{x} = \mu$$
+
+- große Stichprobe → stabilere Schätzung\
+- Zufallsschwankungen gleichen sich aus
+- Annäherung, aber nicht zwingend monoton
+
+## Zentraler Grenzwertsatz
+
+Die Stichprobenverteilung des Mittelwerts wird für großes $n$
+näherungsweise normalverteilt.
+
+$$\bar{X} \sim N(\mu, \frac{\sigma^2}{n})$$
+
+- gilt asymptotisch für großes $n$\
+- unabhängig von der Verteilung der Rohdaten (bei ausreichend großem
+  $n$)\
+- Grundlage vieler Signifikanztests und Konfidenzintervalle
+
+# 6. Verteilungen
+
+## Normalverteilung
+
+$$X \sim N(\mu, \sigma^2)$$
+
+- symmetrisch\
+- Glockenform\
+- Mittelwert = Median = Modus
+
+## Funktionen der Normalverteilung
+
+### Dichtefunktion mit `dnorm()`
+
+```{r}
+dnorm(0)
+```
+
+→ Höhe der Normalverteilung an der Stelle `x = 0`
+
+Mit eigener Verteilung:
+
+```{r}
+dnorm(100, mean = 100, sd = 15)
+```
+
+## Wahrscheinlichkeit mit `pnorm()`
+
+```{r}
+pnorm(1.96)
+```
+
+→ Wahrscheinlichkeit für Werte kleiner oder gleich `1.96`
+
+Mit Mittelwert und Standardabweichung:
+
+```{r}
+pnorm(130, mean = 100, sd = 15)
+```
+
+## Quantile mit `qnorm()`
+
+```{r}
+qnorm(0.975)
+```
+
+→ kritischer z-Wert für ein 95%-Konfidenzintervall
+
+Mit eigener Verteilung:
+
+```{r}
+qnorm(0.95, mean = 100, sd = 15)
+```
+
+## Zufallszahlen mit `rnorm()`
+
+```{r}
+rnorm(5)
+```
+
+→ erzeugt 5 Zufallszahlen aus der Standardnormalverteilung
+
+Mit eigener Verteilung:
+
+```{r}
+rnorm(5, mean = 100, sd = 15)
+```
+
+### 68-95-99 Regel
+
+- $\mu \pm 1\sigma$ → 68%\
+- $\mu \pm 2\sigma$ → 95%\
+- $\mu \pm 3\sigma$ → 99.7%
+
+## Standardisierung
+
+Für Populationen:
+$$z = \frac{x - \mu}{\sigma}$$
+
+→ gibt Abstand in Standardabweichungen an
+
+------------------------------------------------------------------------
+
+Praktisch benutzt man für Stichprobendaten oft:
+$$z = \frac{x - \mu}{s}$$
+
+------------------------------------------------------------------------
+
+## Standardnormalverteilung
+
+$$Z \sim N(0,1)$$
+
+- Mittelwert 0
+- Standardabweichung 1
+- entsteht durch Standardisierung
+
+## t-Verteilung
+
+- breitere Tails als Normalverteilung\
+- berücksichtigt zusätzliche Unsicherheit\
+- symmetrisch um 0
+- Form abhängig von Freiheitsgraden $df$
+
+### Warum t statt z?
+
+- $\sigma$ meist unbekannt
+- wird durch Stichprobe geschätzt
+- für großes $n$: $t \rightarrow z$
+
+### Eigenschaften der t-Verteilung
+
+- kleines $n$ → große Unterschiede zur Normalverteilung, breiter
+- großes $n$ → Annäherung an Normalverteilung
+
+## Freiheitsgrade
+
+für t-Tests für einen Mittelwert
+$$df = n - 1$$
+
+``` r
+dt(x, df)
+pt(x, df)
+qt(p, df)
+rt(n, df)
+```
+
+## Binomialverteilung
+
+- diskrete Verteilung
+- Anzahl Erfolge in $n$ unabhängigen Bernoulli-Experimenten
+
+$$P(X = k) = \binom{n}{k} p^k (1-p)^{n-k}$$
+
+$$E(X) = np$$
+
+$$\text{Var}(X) = np(1-p)$$
+
+### Wahrscheinlichkeit für genau x Erfolge mit `dbinom()`
+
+```{r}
+dbinom(5, size = 10, prob = 0.5)
+```
+
+→ Wahrscheinlichkeit, bei 10 Würfen genau 5-mal Kopf zu erhalten
+
+### Kumulative Wahrscheinlichkeit mit `pbinom()`
+
+```{r}
+pbinom(5, size = 10, prob = 0.5)
+```
+
+→ Wahrscheinlichkeit, höchstens 5-mal Kopf zu erhalten
+
+### Quantile mit `qbinom()`
+
+```{r}
+qbinom(0.95, size = 10, prob = 0.5)
+```
+
+→ kleinste Anzahl an Erfolgen, bei der mindestens 95 % der Verteilung
+erreicht werden
+
+### Zufallszahlen mit `rbinom()`
+
+```{r}
+rbinom(10, size = 10, prob = 0.5)
+```
+
+→ simuliert 10 Experimente mit jeweils 10 Münzwürfen
+
+## Normalapproximation
+
+$$np \ge 5 \quad \text{und} \quad n(1-p) \ge 5$$
+
+→ Faustregel für die Anwendung der Normalapproximation der
+Binomialverteilung
+
+## Beispiel
+
+```{r}
+n <- 100
+p <- 0.5
+
+mu <- n * p
+sigma <- sqrt(n * p * (1 - p))
+
+mu
+sigma
+```
+
+→ Erwartungswert = 50 → Standardabweichung = 5
+
+### Wahrscheinlichkeit näherungsweise berechnen
+
+Gesucht:
+
+- Wahrscheinlichkeit für höchstens 60 Köpfe
+
+```{r}
+pnorm(60, mean = 50, sd = 5)
+```
+
+## Stetigkeitskorrektur
+
+Da die Binomialverteilung diskret und die Normalverteilung stetig ist,
+verwendet man oft eine Stetigkeitskorrektur.
+
+Beispiel:
+
+```{r}
+pnorm(60.5, mean = 50, sd = 5)
+```
+
+→ bessere Approximation für:
+
+```{r}
+pbinom(60, size = 100, prob = 0.5)
+```
+
+# 7. Konfidenzintervalle
+
+Grundidee: Geben einen plausiblen Bereich für den Populationsparameter
+an
+
+Der Standardfehler entspricht der geschätzten Standardabweichung der
+Stichprobenverteilung.
+$$\sigma_{\bar{X}} = \frac{\sigma}{\sqrt{n}}$$
+
+## Allgemeine Form
+
+$$\text{Schätzer} \pm (\text{kritischer Wert} \cdot SE)$$
+
+- kritischer Wert = z- oder t-Wert
+- abhängig vom Konfidenzniveau
+
+## Mittelwert (wichtig!)
+
+$$\bar{x} \pm t_{\alpha/2, df} \cdot \frac{s}{\sqrt{n}}$$
+
+## Anteil
+
+$$\hat{p} \pm z_{\alpha/2} \cdot \sqrt{\frac{\hat{p}(1-\hat{p})}{n}}$$
+
+## Zusammenhang mit Alpha
+
+Konfidenz 1 - $\alpha$
+
+Beispiele:
+
+- 95%-KI $\leftrightarrow \alpha = 0.05$
+- 99%-KI $\leftrightarrow \alpha = 0.01$
+
+## Einflussfaktoren auf die Breite
+
+- $n \uparrow  \Rightarrow$ Intervall schmaler
+- Konfidenz $\uparrow \Rightarrow$ Intervall breiter
+- Streuung $\uparrow \Rightarrow$ Intervall breiter
+- Breites KI: hohe Unsicherheit
+- Schmales KI: präzisere Schätzung
+
+## Freiheitsgrade
+
+$$df = n - 1$$
+
+## Interpretation
+
+korrekt:
+
+> „X% der Intervalle enthalten $\mu$“
+
+falsch:
+
+> „$\mu$ liegt mit X% Wahrscheinlichkeit im Intervall“
+
+## Zusammenhang mit Tests
+
+- H₀ im Intervall → **nicht signifikant**\
+- H₀ außerhalb → **signifikant**
+
+→ mathematisch äquivalent\
+→ auf gleichem Niveau $\alpha$
+
+## R-Code
+
+### Konfidenzintervall für den Mittelwert mit `CI()`
+
+```{r}
+library(Rmisc)
+
+x <- c(12, 15, 18, 20, 25)
+
+CI(x)
+```
+
+→ berechnet das Konfidenzintervall für den Mittelwert
+
+### Konfidenzintervall über `t.test()`
+
+```{r}
+x <- c(12, 15, 18, 20, 25)
+
+t.test(x)$conf.int
+```
+
+→ gibt das 95%-Konfidenzintervall des Mittelwerts zurück
+
+### Konfidenzintervall für einen Anteil mit `prop.test()`
+
+Beispiel:
+
+- 45 Erfolge
+- 100 Versuche
+
+```{r}
+prop.test(45, 100)$conf.int
+```
+
+→ approximatives Konfidenzintervall für einen Anteil
+
+### Exaktes Konfidenzintervall mit `binom.test()`
+
+```{r}
+binom.test(45, 100)$conf.int
+```
+
+→ exaktes Konfidenzintervall für einen Anteil
+
+### Unterschied
+
+| Funktion       | Verfahren                          |
+|----------------|------------------------------------|
+| `prop.test()`  | approximativ (Normalapproximation) |
+| `binom.test()` | exakt (Binomialverteilung)         |
+
+`binom.test()` ist besonders bei kleinen Stichproben sinnvoll.
+
+# 8. Signifikanztests (NHST)
+
+Ziel: Prüfen, ob beobachtete Abweichungen noch durch Zufall erklärbar
+sind
+
+## Nullhypothese $H_0$
+
+beschreibt meist:
+
+- keinen Effekt
+- keinen Unterschied
+- keinen Zusammenhang
+
+Beispiele:
+
+$$\mu_1 = \mu_2$$
+
+$$r = 0 $$
+
+$$p = 0.5$$
+
+## Alternativhypothese $H_1$
+
+beschreibt meist:
+
+- Effekt vorhanden
+- Unterschied vorhanden
+- Zusammenhang vorhanden
+
+## typische Annahmen parametrischer Tests
+
+- metrische Daten\
+- (annähernd) Normalverteilung oder großes $n$\
+- unabhängige Beobachtungen
+
+## Einseitig vs. zweiseitig
+
+- zweiseitig: $H_1: \mu \neq \mu_0$\
+- einseitig: $H_1: \mu > \mu_0$ oder $\mu < \mu_0$
+
+Unterschied:
+
+- zweiseitig → Effekt in beide Richtungen möglich
+- einseitig → nur eine Richtung getestet
+- einseitig → mehr Power (nur bei vorheriger Festlegung, sonst wäre es
+  p-Hacking!)
+
+## Teststatistik
+
+$$t = \frac{\bar{x} - \mu_0}{s / \sqrt{n}}$$
+
+## Entscheidungsregel
+
+$$p \le \alpha \Rightarrow \text{signifikant}$$
+
+$$|t| > t_{\text{krit}} \Rightarrow \text{signifikant}  $$
+
+-\> äquivalent
+
+## Kritischer Wert
+
+Grenzwert der Testverteilung
+
+Abhängig von:
+
+- $\alpha$
+- Freiheitsgraden
+- ein-/zweiseitigem Test
+
+## p-Wert
+
+$$p = p(\text{Daten oder extreme} \mid H_0)$$
+
+→ Wie extrem sind meine Daten, **wenn H₀ stimmt?**
+
+- p ≠ Wahrscheinlichkeit für H₀\
+- p ≠ Effektgröße\
+- p ≠ Replizierbarkeit
+
+## t vs. z
+
+- σ bekannt → z-Verteilung\
+- σ unbekannt → t-Verteilung (**Standardfall**)
+
+# 9. Fehler & Power
+
+## Fehlerarten
+
+### Fehler 1. Art
+
+\$\alpha \$
+
+→ $H_0$ ablehnen, obwohl sie wahr ist
+
+→ falsch positiv
+
+### Fehler 2. Art
+
+\$ \beta \$
+
+→ $H_0$ beibehalten, obwohl sie falsch ist → falsch negativ
+
+## Zusammenhang
+
+- $\alpha \downarrow \Rightarrow \beta \uparrow$
+
+## Power
+
+$$\text{Power} = 1 - \beta$$
+
+→ Wahrscheinlichkeit, echten Effekt zu entdecken
+
+## Einflussfaktoren
+
+- Stichprobengröße (**wichtigster Hebel**)\
+- Effektgröße\
+- Streuung\
+- Signifikanzniveau
+
+### Wichtig
+
+Große Stichproben können winzige Effekte signifikant machen, deshalb
+zusätzlich betrachten:
+
+- Effektgröße
+- Konfidenzintervall
+- praktische Relevanz
+
+# 10. Effektgröße / Cohen's d
+
+$$d = \frac{\bar{x}_1 - \bar{x}_2}{s}$$
+
+## Interpretation
+
+- 0.2 → klein\
+- 0.5 → mittel\
+- 0.8 → groß
+
+Wichtig:
+
+Signifikanz ≠ praktische Relevanz
+
+# 11. Fisher vs. Neyman-Pearson
+
+## Fisher
+
+- p-Wert als Evidenz gegen $H_0$
+- Fokus auf Signifikanz
+
+## Neyman-Pearson
+
+- Entscheidung zwischen $H_0$ und $H_1$
+- Fokus auf Fehlerarten, Power, Entscheidungsregeln
+
+# 12. Gesamtzusammenhang
+
+→ Zufallsstichprobe → Stichprobenstatistik\
+→ Stichprobenverteilung\
+→ Standardfehler\
+→ Konfidenzintervall / Teststatistik → Inferenz über Population →
+Signifikanztest
+
+## Gesamtidee
+
+$$\text{Inferenzstatistik} = \text{Schätzen} + \text{Testen} + \text{Entscheiden unter Unsicherheit}$$
+
+## Grundformel der Signifikanz
+
+$t = \frac{\text{Effekt}}{\text{Streuung}}$
+
+### Signifikanz entsteht durch:
+
+- großen Effekt\
+- kleine Streuung\
+- großes $n$
+
+# 13. t-Tests
+
+## Überblick
+
+Es gibt drei wichtige Arten von t-Tests:
+
+| Test                               | Zweck                                 |
+|-----------------------------------|-------------------------------------|
+| Einstichproben-t-Test              | Mittelwert vs. vorgegebener Wert      |
+| t-Test für unabhängige Stichproben | Vergleich zweier unabhängiger Gruppen |
+| t-Test für abhängige Stichproben   | Vergleich verbundener Messungen       |
+
+## 13.1 t-Test für unabhängige Stichproben
+
+### Ziel
+
+Vergleich zweier unabhängiger Gruppenmittelwerte
+
+### Vorraussetzungen
+
+- unabhängige Gruppen
+- metrische Daten
+- Normalverteilung
+- Varianzhomogenität (sonst: Welch-Test)
+
+Beispiele:
+
+- Therapie vs. Kontrollgruppe
+- Männer vs. Frauen
+
+### Nullhypothese
+
+$$H_0: \mu_A = \mu_B$$
+
+bzw.
+
+$$\mu_A - \mu_B = 0$$
+
+### Alternativhypothese
+
+#### ungerichtet
+
+$$H_1: \mu_A \neq \mu_B$$
+
+#### gerichtet
+
+$$H_1: \mu_A > \mu_B$$
+
+oder
+
+$$H_1: \mu_A < \mu_B$$
+
+### Warum halbiert sich der p-Wert?
+
+Beim gerichteten Test:
+
+- nur eine Seite der Verteilung relevant
+
+- gesamte Alpha-Fehlerfläche auf einer Seite
+
+Dadurch:
+
+- p-Wert halbiert sich
+
+- mehr Power
+
+Der t-Wert bleibt gleich:
+
+- Daten ändern sich nicht
+
+- nur Bewertungsregel ändert sich
+
+Die vereinfachte Prüfgröße für den Fall der Annahme eines
+Gruppenunterschieds von 0 in der Nullhypothese berechnet sich als:
+
+$$\mu_A - \mu_B = 0$$
+
+und somit:
+
+$$t = \frac{\bar{x_A} - \bar{x_B}} {SE_{\bar{x_A} - \bar{x_B}}}$$
+
+### Varianzhomogenität annehmen
+
+#### Vergleich zweier Gruppen
+
+```{r}
+t.test(weight ~ group,
+       data = subset(PlantGrowth,
+                     group %in% c("ctrl", "trt1")),
+       var.equal = TRUE)
+```
+
+→ vergleicht die Mittelwerte der Gruppen `"ctrl"` und `"trt1"`
+
+#### Bedeutung von `var.equal = TRUE`
+
+```{r}
+var.equal = TRUE
+```
+
+→ nimmt gleiche Varianzen in beiden Gruppen an
+
+Das entspricht dem klassischen Student-t-Test.
+
+## 13.2 Welch-Test
+
+Korrektur für ungleiche Varianzen
+
+Eigenschaften:
+
+- robuster gegenüber Varianzheterogenität
+- leicht geringere Power
+- Standard in R
+
+### Prüfgröße
+
+$$t = \frac{(\bar{x_A} - \bar{x_B}) - (\mu_A - \mu_B)} {SE_{\bar{x_A}-\bar{x_B}}}$$
+
+### Standardfehler des Mittelwertsunterschieds
+
+Für unabhängige Gruppen:
+
+$$SE_{\bar{x_A}-\bar{x_B}} = \sqrt{\frac{s²_A}{n_A} + \frac{s²_B}{n_B}}$$
+
+### Freiheitsgrade:
+
+Bei gleichen Varianzen:
+
+$$df = n_A + n_B - 2$$
+
+Beim Welch-Test:
+
+- korrigierte Freiheitsgrade
+- häufig Kommazahlen
+
+### Interpretation des t-Werts
+
+- standadisierter Mittelwertsunterschied
+- Effekt relativ zur Streuung
+
+Großer Betrag von $t$:
+
+→ stärkere Evidenz gegen $H_0$
+
+### Zusammenhang
+
+$$|t| \uparrow \Rightarrow p \downarrow$$
+
+### Durchführung in R
+
+```{r}
+t.test(weight ~ group,
+       data = subset(PlantGrowth,
+                     group %in% c("ctrl", "trt1")))
+```
+
+→ vergleicht die Mittelwerte der Gruppen `"ctrl"` und `"trt1"`
+
+#### Gerichtete Tests
+
+Gruppe 1 größer als Gruppe 2
+
+```{r}
+t.test(weight ~ group,
+       data = subset(PlantGrowth,
+                     group %in% c("ctrl", "trt1")),
+       alternative = "greater")
+```
+
+→ prüft, ob Gruppe 1 einen größeren Mittelwert besitzt
+
+Gruppe 1 kleiner als Gruppe 2
+
+```{r}
+t.test(weight ~ group,
+       data = subset(PlantGrowth,
+                     group %in% c("ctrl", "trt1")),
+       alternative = "less")
+```
+
+→ prüft, ob Gruppe 1 einen kleineren Mittelwert besitzt
+
+| Argument      | Bedeutung         |
+|---------------|-------------------|
+| `"two.sided"` | zweiseitiger Test |
+| `"greater"`   | Gruppe 1 größer   |
+| `"less"`      | Gruppe 1 kleiner  |
+
+#### Mittelwertsunterschied in $H_0$
+
+Standardmäßig testet `t.test()`, ob der Mittelwertsunterschied 0 ist.
+
+$$H_0: \mu_A - \mu_B = 1$$
+
+statt nur 0
+
+```{r}
+t.test(weight ~ group,
+       data = subset(PlantGrowth,
+                     group %in% c("ctrl", "trt1")),
+       mu = 1)
+```
+
+→ testet, ob sich die Mittelwerte der Gruppen um genau 1 unterscheiden
+
+## 13.2 t-Test für abhängige Stichproben
+
+### Ziel
+
+Vergleich verbundener Messungen
+
+Beispiele:
+
+- Vorher-Nachher-Messung
+- dieselben Personen zweimal getestet
+- Matching
+
+### Vorraussetzungen
+
+- abhängige Messungen
+- metrische Daten
+- Normalverteilung der Differenzwerte
+
+### Idee
+
+Nicht die Rohwerte werden verglichen, sondern die Differenzwerte
+
+$$x_{diff} = x_A - x_B$$
+
+### Nullhypothese
+
+$$H_0: \mu_{diff} = 0$$
+
+### Prüfgröße
+
+$$t = \frac{\bar{x_{diff}}}{SE_{\bar{x_{diff}}}}$$
+
+### Standardfehler
+
+$$SE_{\bar{x_{diff}}} = \frac{s_{diff}}{\sqrt{n}}$$
+
+### Freiheitsgrade
+
+$$df = n-1$$
+
+### Einfluss der Korrelation
+
+hohe positive Korrelation zwischen Messungen:
+
+- kleinere Fehlervarianz
+- größerer t-Wert
+- höhere Power
+
+### Durchführung in R
+
+#### Beispiel mit `mtcars`
+
+Wir vergleichen den Verbrauch desselben Autos in zwei verschiedenen
+Einheiten:
+
+- `mpg` = miles per gallon
+- `mpg * 0.425` ≈ alternative Verbrauchsskala
+
+```{r}
+head(mtcars[, c("mpg")])
+```
+
+Zwei abhängige Messreihen erzeugen
+
+```{r}
+x1 <- mtcars$mpg
+x2 <- mtcars$mpg * 0.425
+```
+
+#### Gepaarter t-Test
+
+```{r}
+t.test(x1, x2, paired = TRUE)
+```
+
+→ vergleicht die Mittelwerte zweier abhängiger Messungen
+
+#### Gerichtete Tests
+
+Gruppe 1 größer als Gruppe 2
+
+```{r}
+t.test(x1, x2,
+       paired = TRUE,
+       alternative = "greater")
+```
+
+→ prüft, ob die erste Messung im Mittel größer ist
+
+Gruppe 1 kleiner als Gruppe 2
+
+```{r}
+t.test(x1, x2,
+       paired = TRUE,
+       alternative = "less")
+```
+
+→ prüft, ob die erste Messung im Mittel kleiner ist
+
+## 13.3 Einstichproben-t-Test
+
+### Ziel
+
+Vergleich eines Stichprobenmittelwertes mit einem festen Wert
+
+### Vorraussetzungen
+
+- metrische Daten
+- Normalverteilung
+- unabhängige Beobachtungen
+
+### Nullhypothese
+
+$$H_0: \mu = \mu_0$$
+
+### Prüfgröße
+
+$$t = \frac{\bar{x} - \mu_0} {SE_{\bar{x}}}$$
+
+### Durchführung in R
+
+```{r}
+t.test(mtcars$mpg, mu = 20)
+```
+
+→ testet, ob sich der Mittelwert von `mpg` signifikant von 20
+unterscheidet
+
+#### Gerichteter Test
+
+Mittelwert kleiner als 20
+
+```{r}
+t.test(mtcars$mpg,
+       mu = 20,
+       alternative = "less")
+```
+
+→ prüft, ob der Mittelwert kleiner als 20 ist
+
+Mittelwert größer als 20
+
+```{r}
+t.test(mtcars$mpg,
+       mu = 20,
+       alternative = "greater")
+```
+
+→ prüft, ob der Mittelwert größer als 20 ist
+
+## 13.4 Effektgrößen bei t-Tests
+
+### Cohen's d mit gepoolter SD bei unabhängigen Stichproben
+
+$$d = \frac{\bar{x_1}-\bar{x_2}}{s_{pooled}}$$
+
+#### Interpretation
+
+| d   | Bedeutung |
+|-----|-----------|
+| 0.2 | klein     |
+| 0.5 | mittel    |
+| 0.8 | groß      |
+
+Wichtig:
+
+- Signifikanz abhängig von $n$
+- Effektgröße hat praktische Relevanz
+- bei großen Stichproben können winzige Effekte signifikant werden
+
+### Effektgröße basierend auf Differenzwerten bei abhängigen Stichproben
+
+$$d = \frac{\bar{x}_diff}{s_{diff}}$$
+
+## 13.5 Poweranalyse bei t-Tests
+
+### Ziel
+
+Bestimmen, wie groß $n$ sein muss, um einen Effekt zu entdecken
+
+### Einflussfaktoren
+
+- Effektgröße $d$
+- Stichprobengröße
+- Signifikanzniveau $a$
+- gewünschte Power
+
+Größerer Effekt → höhere Power
+
+Größeres $n$ → höhere Power
+
+Kleineres $a$ → geringere Power
+
+### Standardwert
+
+Häufig:
+
+$$1 - \beta = 0.80$$
+i → 80% Wahrscheinlichkeit, einen Effekt zu entdecken
+
+## 13.6 Interpretation des p-Wertes
+
+### Definition
+
+Der p-Wert ist:
+
+> Wahrscheinlichkeit für diese oder extremere Daten, wenn $H_0$ stimmt
+
+$$p(Daten|H_0)$$
+
+### Entscheidungsregel
+
+$$p > \alpha$$
+
+→ nicht signifikant, $H_0$ beibehalten
+
+$$p \le \alpha$$
+
+→ signifikant, Entscheidung für $H_1$
+
+## 13.7 Zentrale Kritikpunkte am NHST (Kurzüberblick)
+
+### p-Wert ist nicht:
+
+- Wahrscheinlichkeit für $H_0$
+- Wahrscheinlichkeit, dass Daten "durch Zufall" entstanden
+- Effektgröße
+- praktische Relevanz
+- Replizierbarkeit
+
+### Probleme
+
+#### Dichotomes Denken
+
+- signifikant vs. nicht signifikant
+- künstliche Grenze
+
+#### Abhängigkeit von $n$
+
+- große Stichproben →leichter signifikant
+
+#### Unrealistische Nullhypothesen
+
+- exact 0 oft unrealistisch
+
+## 13.8 Alternativen:
+
+### Obergrenze Bayes-Faktor
+
+$$BayesfaktorB = \frac{p(D|H_1)}{p(D|H_0)}$$
+
+Vergleicht:
+
+- wie gut $H_1$ vs. $H_0$ zu den Daten passt
+
+Großer Wert: → Evidenz für $H_1$
+
+#### Berechnung händisch
+
+$$B \le \bar{B} = \frac{1}{-e \cdot p \cdot ln(p)}$$
+
+```{r}
+1 / (-exp(1) * 0.00047 * log(0.00047))
+```
+
+→ berechnet den $e$-Wert aus einem bereits bekannten p-Wert
+
+#### Direkte Berechnung aus einem t-Test
+
+```{r}
+t <- t.test(mtcars$mpg, mu = 20)
+
+1 / (-exp(1) * t$p.value * log(t$p.value))
+```
+
+→ berechnet den $e$-Wert direkt aus dem p-Wert des Tests
+
+#### Bedeutung
+
+Der $e$-Wert beschreibt die maximale Evidenz gegen die Nullhypothese.
+
+Große Werte sprechen für stärkere Evidenz gegen $H_0$.
+
+### Shannon-Information (s-Wert)
+
+$$S = - log_2(p)$$
+
+### Interpretation:
+
+- Evidenz gegen $H_0$
+- vergleichbar mit mehrfach "Kopf" bei Münzwurd
+
+### Berechnung in R
+
+über händisches Einsetzen des p-Wertes
+
+```{r}
+-log2(0.00047)
+```
+
+Berechnung über Einfügen der Syntax zur Berechnung des p-Wertes
+(genauer)
+
+```{r}
+t <- t.test(mtcars$mpg, mu = 20)
+
+-log2(t$p.value)
+```
+
+## 13.9 APA-Bericht
+
+### Format
+
+$$t(df) = Wert, p = Wert$$
+
+Beispiel:
+
+> *t*(81.96) = 3.64, *p* \< .001
+
+### Regeln
+
+- *t* kursiv
+- *p* kursiv
+- zwei Nachkommastellen bei *t*
+- drei Nachkommastellen bei *p*
+
+Außerdem berichten:
+
+- Mittelwerte
+- Standardabweichungen
+- Richtung des Tests
+
+# 14. Einfaktorielle Varianzanalyse
+
+## Grundidee
+
+Die Varianzanalyse prüft, ob sich die Mittelwerte von mehr als zwei
+Gruppen statistisch signifikant unterscheiden.
+
+ANOVA = Analysis of Variance
+
+Obwohl Mittelwerte verglichen werden, läuft der Test über Varianzen.
+
+## Wann verwendet man ANOVA?
+
+- abhängige Variable metrisch / intervallskaliert
+- unabhängige Variable kategorial mit mindestens 3 Gruppen
+- Gruppen unabhängig voneinander
+
+Beispiel:
+
+- AV: Gefährlichkeit
+- UV/Faktor: Meer mit mehreren Gruppen
+
+## Warum nicht mehrere t-Tests?
+
+Mehrere t-Tests erhöhen die Wahrscheinlichkeit für einen Fehler 1. Art.
+
+$$\alpha_{\text{kumuliert}} = 1 - (1-\alpha)^j$$
+
+mit $j$ = Anzahl der Tests
+
+Deshalb verwendet man bei mehr als zwei Gruppen eine ANOVA statt vieler
+einzelner t-Tests.
+
+## Alternative: Bonferroni-Korrektur
+
+kontrolliert die $\alpha$-Fehler-Kumulierung
+
+$$\alpha' = \frac{\alpha}{j}$$
+
+Nachteil:
+
+- konservativ
+- geringere Power
+- höhere $\beta$-Fehler-Wahrscheinlichkeit
+
+## Hypothesen
+
+Nullhypothese:
+
+$$H_0: \mu_1 = \mu_2 = \mu_3 = \dots = \mu_k$$
+
+Alternativhypothese:
+
+$$H_1: \text{mindestens ein Mittelwert unterscheidet sich}$$
+
+Wichtig: Die ANOVA ist ein Omnibus-Test.
+
+Das bedeutet:
+
+- sie sagt nur, ob irgendein Unterschied besteht
+- sie sagt nicht, welche Gruppen sich unterscheiden
+- sie sagt nicht, in welche Richtung ein Unterschied besteht
+- dafür: Post-hoc-Tests oder Kontrastanalysen
+
+## Logik der ANOVA
+
+Die ANOVA vergleicht zwei Varianzschätzungen:
+
+1.  Varianz zwischen den Gruppen\
+    → systematische Variation / Effekt
+
+2.  Varianz innerhalb der Gruppen\
+    → Fehlervarianz / unsystematische Variation
+
+Grundidee:
+
+- große Unterschiede zwischen Gruppen → spricht für einen Effekt
+- große Streuung innerhalb Gruppen → spricht gegen einen klaren Effekt
+
+$$F = \frac{\hat{\sigma}^2_{zw}}{\hat{\sigma}^2_{inn}}$$
+
+### Varianzzerlegung
+
+Gesamtvariation wird zerlegt in:
+
+$$QS_{gesamt} = QS_{zwischen} + QS_{innerhalb}$$
+
+- zwischen Gruppen: systematische Variation
+
+- innerhalb Gruppen: Fehlervariation / unsystematische Variation
+
+## F-Wert
+
+$$F = \frac{\text{Varianz zwischen Gruppen}}{\text{Varianz innerhalb Gruppen}}$$
+
+oder:
+
+$$F = \frac{MS_{\text{zwischen}}}{MS_{\text{innerhalb}}}$$
+
+Interpretation:
+
+- $F \approx 1$: Gruppenunterschiede nicht größer als zufällige Streuung
+- $F > 1$: Gruppen unterscheiden sich stärker als durch Fehlervarianz
+  erklärbar
+- je größer $F$, desto eher signifikant
+
+## F-Verteilung
+
+- nur positive Werte
+- rechtsschief
+- abhängig von:
+  - Zählerfreiheitsgraden
+  - Nennerfreiheitsgraden
+
+großes F: → spricht gegen $H_0$
+
+## Quadratsummen
+
+Gesamtvariation:
+
+$$QS_{\text{gesamt}} = QS_{\text{zwischen}} + QS_{\text{innerhalb}}$$
+
+Bedeutung:
+
+- $QS_{\text{zwischen}}$: Variation der Gruppenmittelwerte um den
+  Gesamtmittelwert
+- $QS_{\text{innerhalb}}$: Variation der Einzelwerte um ihren
+  Gruppenmittelwert
+
+$$QS_{gesamt} = \sum (x_{ij} - \bar{x})^2$$
+
+### Innerhalb Gruppen
+
+$$QS_{inn} = \sum (x_{ij} - \bar{x}_j)^2$$
+
+### Zwischen Gruppen
+
+$$QS_{zw} = \sum n_j (\bar{x}_j - \bar{x})^2$$
+
+## Freiheitsgrade
+
+Zwischen Gruppen:
+
+$$df_{\text{zwischen}} = k - 1$$
+
+Innerhalb Gruppen:
+
+$$df_{\text{innerhalb}} = N - k$$
+
+Gesamt:
+
+$$df_{\text{gesamt}} = N - 1$$
+
+Dabei gilt:
+
+- $k$ = Anzahl der Gruppen
+- $N$ = Gesamtstichprobengröße
+
+## ANOVA-Tabelle
+
+| Quelle | QS | df | MS | F | p |
+|:-----------|-----------:|:----------:|:----------:|:----------:|:----------:|
+| zwischen Gruppen | $QS_{zw}$ | $k-1$ | $MS_{zw} = QS_{zw}/df_{zw}$ | $F = MS_{zw}/MS_{inn}$ | p |
+| innerhalb Gruppen | $QS_{inn}$ | $N-k$ | $MS_{inn} = QS_{inn}/df_{inn}$ |  |  |
+| gesamt | $QS_{ges}$ | $N-1$ |  |  |  |
+
+mit:
+
+$$MS = \frac{QS}{df}$$
+
+$$F = \frac{MS_{zw}}{MS_{inn}}$$
+
+## Voraussetzungen
+
+- abhängige Variable intervallskaliert / metrisch
+- unabhängige Gruppen / Beobachtungen
+- Normalverteilung innerhalb der Gruppen
+- Varianzhomogenität
+
+Wichtig:
+
+- ANOVA ist relativ robust gegenüber Verletzungen der Normalverteilung
+  besonders bei großen und ähnlich großen Gruppen
+- bei gleich großen Gruppen auch relativ robust gegenüber ungleichen
+  Varianzen
+- Unabhängigkeit ist besonders wichtig
+- problematisch: ungleiche Gruppengrößen + heterogene Varianzen
+
+## Interpretation
+
+Wenn $p \le \alpha$:
+
+- Ergebnis signifikant
+- $H_0$ wird verworfen
+- mindestens ein Gruppenmittelwert unterscheidet sich
+
+Wenn $p > \alpha$:
+
+- Ergebnis nicht signifikant
+- kein ausreichender Hinweis auf Gruppenunterschiede
+
+Nicht signifikant bedeutet nicht automatisch, dass alle Mittelwerte
+gleich sind.
+
+## R-Code
+
+```{r}
+# ANOVA rechnen
+modell <- aov(weight ~ group, data = PlantGrowth)
+
+# ANOVA-Tabelle anzeigen
+summary(modell)
+
+#Output lesen
+# Df       = Freiheitsgrade
+# Sum Sq   = Quadratsummen
+# Mean Sq  = Mittelquadrate / Varianzschätzungen
+# F value  = empirischer F-Wert
+# Pr(>F)   = p-Wert
+```
+
+### Welch-ANOVA
+
+Bei verletzter Varianzhomogenität kann eine Welch-ANOVA verwendet
+werden.
+
+```{r}
+oneway.test(weight ~ group,
+            data = PlantGrowth,
+            var.equal = FALSE)
+```
+
+## Post-hoc-Tests
+
+Nach einer signifikanten ANOVA weiß man nur, dass irgendein Unterschied
+besteht.
+
+Post-hoc-Tests prüfen anschließend, welche Gruppen sich unterscheiden.
+
+Beispiele:
+
+- Tukey-Test
+- Scheffé-Test
+
+Auch Bonferroni-Korrektur kann als Post-hoc-Test angewendet werden zur
+Kontrolle des $\alpha$-Fehlers
+
+### Tukey-Post-hoc-Test
+
+```{r}
+modell <- aov(weight ~ group, data = PlantGrowth)
+
+TukeyHSD(modell)
+```
+
+→ vergleicht alle Gruppenpaare miteinander
+
+## Effektgröße Eta-Quadrat
+
+$$\eta^2 = \frac{QS_{\text{zwischen}}}{QS_{\text{gesamt}}}$$
+
+Bedeutung:
+
+Anteil der Gesamtvariation, der durch die Gruppenzugehörigkeit erklärt
+wird. aka Anteil erklärter Varianz
+
+Interpretation nach Cohen:
+
+| $\eta^2$ | Bedeutung |
+|---------:|-----------|
+|     0.01 | klein     |
+|     0.06 | mittel    |
+|     0.14 | groß      |
+
+Alternative Formel:
+
+$$\eta^2 = \frac{F \cdot df_{\text{zwischen}}}{F \cdot df_{\text{zwischen}} + df_{\text{innerhalb}}}$$
+
+```{r}
+modell <- aov(weight ~ group, data = PlantGrowth)
+
+anova_tab <- summary(modell)[[1]]
+
+qs_zwischen <- anova_tab$`Sum Sq`[1]
+qs_gesamt <- sum(anova_tab$`Sum Sq`)
+
+qs_zwischen / qs_gesamt
+```
+
+## Power bei ANOVA
+
+Power hängt ab von:
+
+- Effektgröße
+- Stichprobengröße pro Gruppe
+- Anzahl der Gruppen
+- Signifikanzniveau $\alpha$
+
+Größeres $n$ → höhere Power\
+Größerer Effekt → höhere Power\
+Kleineres $\alpha$ → geringere Power
+
+## APA-Bericht
+
+$$F(df_{zw}, df_{inn}) = Wert,\ p = ... $$
+
+Beispiel:
+
+> Eine einfaktorielle ANOVA ergab einen signifikanten Effekt des Meeres
+> auf die Gefährlichkeit, $F(2,81)=8.52, p<.001$.
+
+Berichtet werden:
+
+- Art der ANOVA
+- F-Wert
+- Zähler- und Nennerfreiheitsgrade
+- p-Wert
+
+## weitere Varianten
+
+- zweifaktorielle ANOVA
+- ANOVA mit Messwiederholung
+- gemischte Designs
+
+# 15. Inferenzstatistik der Korrelation
+
+## Stichprobe vs Population
+
+| Symbol | Bedeutung              |
+|--------|------------------------|
+| $r$    | Stichprobenkorrelation |
+| $\rho$ | Populationskorrelation |
+
+## Ziel
+
+Prüfen, ob sich eine Korrelation signifikant von 0 unterscheidet
+
+Frage:
+
+> Existiert ein linearer Zusammenhang in der Population oder ist die
+> beobachtete Korrelation nur Zufall?
+
+## Voraussetzungen
+
+- intervallskalierte Variablen
+- bivariate Normalverteilung
+  - Nicht: jede Variable einzeln normalverteilt
+  - sondern: gemeinsame Verteilung annähernd normal
+- unabhängige Beobachtungen
+
+Der Test ist relativ robust gegenüber kleineren Verletzungen der
+Normalverteilung.
+
+Problematisch: - starke Schiefe - starke Ausreißer - nichtlineare
+Zusammenhänge
+
+## Hypothesen
+
+### Ungerichtete Hypothese
+
+Nullhypothese:
+
+$$H_0: \rho = 0$$
+
+Alternativ Hypothese
+
+$$H_1: \rho \neq 0$$
+
+→ Zusammenhang kann positiv oder negativ sein
+
+### Gerichtete Hypothese
+
+Positive Richtung:
+
+$$H_1: \rho > 0$$
+
+Negative Richtung:
+
+$$H_1: \rho < 0$$
+
+Wichtig:
+
+- Richtung muss vorher festgelegt werden
+- einseitige Tests haben mehr Power
+- falsche Richtung kann zu nicht-signifikanten Ergebnissen (trotz
+  eigentlicher Signifikanz) führen
+
+## Teststatistik
+
+Der Signifikanztest für die Korrelation benutzt einen t-Test:
+
+$$t = \frac{r\sqrt{n-2}}{\sqrt{1-r^2}}$$
+
+## Bedeutung der Bestandteile
+
+| Symbol | Bedeutung              |
+|--------|------------------------|
+| $r$    | Stichprobenkorrelation |
+| $n$    | Anzahl der Wertepaare  |
+| $n-2$  | Freiheitsgrade         |
+
+## Freiheitsgrade
+
+$$df = n-2$$
+
+Warum? Bei der Schätzung:
+
+- Mittelwert von X
+- Mittelwert von Y
+
+gehen zwei Freiheitsgrade verloren
+
+## Logik des Tests
+
+Wenn:
+
+- $r$ groß
+- und Stichprobe groß
+
+dann wird:
+
+- $t$ groß
+- p-Wert klein
+- Ergebnis eher signifikant
+
+Wenn:
+
+- $r$ nahe 0
+
+dann wird: - $t$ klein - p-Wert groß
+
+## Interpretation der Korrelation
+
+### Richtung
+
+| Wert  | Bedeutung                  |
+|-------|----------------------------|
+| $r>0$ | positiver Zusammenhang     |
+| $r<0$ | negativer Zusammenhang     |
+| $r=0$ | kein linearer Zusammenhang |
+
+### Stärke
+
+| $|r|$ | Interpretation   |
+|-------|------------------|
+| 0.1   | kleiner Effekt   |
+| 0.3   | mittlerer Effekt |
+| 0.5   | großer Effekt    |
+
+(nach Cohen)
+
+## Effektgröße
+
+Die Korrelation selbst ist bereits eine Effektgröße.
+
+Vorteil: - unabhängig von Stichprobengröße interpretierbar
+
+Wichtig:
+
+- große Stichproben können kleine Korrelationen signifikant machen
+- kleine Stichproben können große Korrelationen nicht-signifikant machen
+
+## Konfidenzintervall
+
+R gibt meist ein 95%-Konfidenzintervall für $r$ aus.
+
+Interpretation:
+
+- enthält das KI den Wert 0:
+  - → Zusammenhang nicht signifikant
+- enthält das KI den Wert 0 nicht:
+  - → Zusammenhang signifikant
+
+## Unterschied t-Test vs z-Test
+
+### t-Test
+
+Benutzt für:
+
+$$H_0: \rho = 0$$
+
+### z-Test
+
+Benutzt:
+
+- wenn gegen andere Korrelationswerte getestet wird
+- oder zwei Korrelationen verglichen werden
+
+Test mit R nicht Bestandteil des Moduls.
+
+## APA-Bericht
+
+- $r$
+- Freiheitsgrade
+- p-Wert
+- Richtung des Tests
+
+Beispiel:
+
+> Zwischen Alter und Gefährlichkeit bestand kein signifikanter
+> Zusammenhang, $r(89) = .06, p = .267$
+
+## R-Code
+
+``` r
+# Korrelation
+cor(mtcars$mpg,
+    mtcars$wt)
+```
+
+→ berechnet die Pearson-Korrelation zwischen Verbrauch und Gewicht
+
+```{r}
+# Signifikanztest
+
+cor.test(mtcars$mpg,
+         mtcars$wt)
+```
+
+→ testet, ob die Korrelation signifikant von 0 verschieden ist
+
+```{r}
+# gerichtete Hypothese
+cor.test(mtcars$mpg,
+         mtcars$wt,
+         alternative = "greater")
+```
+
+→ prüft, ob die wahre Korrelation größer als 0 ist
+
+```{r}
+# nur vollständige Fälle
+cor.test(mtcars$mpg,
+         mtcars$wt,
+         use = "pairwise.complete.obs")
+```
+
+→ verwendet nur Beobachtungen ohne fehlende Werte (`NA`)
+
+# 16. Inferenzstatistik der Regression
+
+## Ziel
+
+Prüfen, ob ein Regressionsmodell signifikant Varianz erklärt.
+
+Frage:
+
+> unterscheidet sich der Regressionskoeffizent von 0? erklärt das
+> Gesamtmodell signifikant Varianz
+
+## Grundlagen
+
+### Regressionsgleichung
+
+$$\hat{y} = a + bx$$
+
+| Symbol   | Bedeutung                         |
+|----------|-----------------------------------|
+| $a$      | Achsenabschnitt                   |
+| $b$      | Regressionskoeffizient / Steigung |
+| $\hat y$ | vorhergesagter Wert               |
+
+### Interpretation von b
+
+b gibt an:
+
+- um wie viele Einheiten $y$ sich verändert, wenn $x$ um eine Einheit
+  steigt
+
+## Hypothesen
+
+### Regressionskoeffizent
+
+Nullhypothese:
+
+$$H_0: b = 0$$
+
+Alternativhypothese:
+
+$$H_1: b \neq 0$$
+
+### Bedeutung
+
+Wenn:
+
+$$b = 0 $$
+
+dann:
+
+- keine lineare Vorhersage möglich
+
+Wenn:
+
+$$ 
+b \neq 0 $$
+
+dann:
+
+- signifikanter linearer Zusammenhang
+- signifikanter Prädiktor
+
+## t-Test für den Regressionskoeffizienten
+
+R überprüft inferenzstatistisch: unterscheidet sich b signifikant von 0?
+
+Hinweis:
+
+Bei multipler Regression können unterschiedliche Prädiktoren
+unterschiedliche p-Werte haben.
+
+## Voraussetzungen
+
+- Linearität
+- unabhängige Beobachtungen
+- Homoskedastizität (Die Streuung der Residuen soll über alle
+  vorhergesagten Werte hinweg ähnlich groß sein.)
+- Normalverteilung der Residuen
+
+## Hypothesen
+
+- Die Nullhypothese lautet: Der Regressionskoeffizient beträgt 0.
+- Die Alternativhypothese lautet: Der Regressionskoeffizient ist von 0
+  verschieden.
+
+## Teststatistik
+
+$$t = \frac{b}{SE_b}$$
+
+| Symbol | Bedeutung                          |
+|--------|------------------------------------|
+| $b$    | geschätzter Regressionskoeffizient |
+| $SE_b$ | Standardfehler des Koeffizienten   |
+
+## Interpretation
+
+### Großes $t$:
+
+- kleiner p-Wert
+- signifikanter Prädiktor
+
+### Kleines $t$:
+
+- großer p-Wert
+- kein signifikanter Prädiktor
+
+## R-Code
+
+```{r}
+# Modell erstellen
+modell <- lm(mpg ~ wt,
+             data = mtcars)
+```
+
+→ erstellt ein lineares Regressionsmodell
+
+```{r}
+# Zusammenfassung
+summary(modell)
+```
+
+- `mpg` = abhängige Variable / Kriterium
+- `wt` = unabhängige Variable / Prädiktor
+
+### wichtige Teile des Outputs
+
+| Teil               | Bedeutung                 |
+|--------------------|---------------------------|
+| Estimate           | geschätzter Koeffizient   |
+| Std. Error         | Standardfehler            |
+| t value            | t-Wert                    |
+| $Pr(>|t|)$         | p-Wert                    |
+| Multiple R-squared | Determinationskoeffizient |
+| F-statistic        | F-Test Gesamtmodell       |
+
+R gibt oft Konfidenzintervalle für Regressionskoeffizienten aus.
+
+Enthält das KI den Wert 0 nicht:
+
+→ Koeffizient signifikant
+
+### Regressionsgerade visualisieren
+
+```{r}
+plot(mtcars$wt,
+     mtcars$mpg)
+
+abline(modell)
+```
+
+→ zeichnet die Regressionsgerade in das Streudiagramm
+
+## Zusammenhang mit Korrelation
+
+Bei einfacher linearer Korrelation gilt:
+
+- Test auf $b$
+- Test auf $r$
+- F-Test für Gesamtmodell
+
+führen zum gleichen p-Wert.
+
+Das gilt nur:
+
+- bei einem einzigen Prädiktor
+
+Nicht:
+
+- bei multipler Regression
+
+## Residuen
+
+Residuals = Vorhersagefehler
+
+$$e_i = y_i - \hat{y}_i $$
+
+→ Differenz zwischen:
+
+- tatsächlichem Wert
+- vorhergesagtem Wert
+
+Große Residuen:
+
+- schlechte Vorhersage
+
+Kleine Residuen:
+
+- gute Vorhersage
+
+## Determinationskoeffizient $R^2$
+
+ist der Anteil aufgeklärter Varianz
+
+### Interpretation
+
+Beispiel:
+
+$$R^2 = 0.37 $$
+
+→ 37% der Varianz von $y$ werden durch $x$ erklärt.
+
+Hohe Varianzaufklärung bedeutet nicht automatisch Kausalität.
+
+### Zusammenhang mit Korrelation
+
+bei einfacher linearer Regression gilt:
+
+$$R^2 = r^2 $$
+
+### Varianzzerlegung
+
+Gesamtvarianz wird zerlegt in:
+
+$$QS_{gesamt} = QS_{Regression} + QS_{Fehler}$$
+
+### Regressionsquadratsumme (erklärte Variation)
+
+$$QS_{Regression}$$
+
+### Fehlerquadratsumme (nicht erklärte Variation)
+
+$$QS_{Fehler}$$
+
+## R-Code
+
+```{r}
+modell <- lm(mpg ~ wt,
+             data = mtcars)
+
+summary(modell)$r.squared
+```
+
+→ gibt den Anteil erklärter Varianz des Modells zurück
+
+## APA-Bericht
+
+> Das Gewicht eines Autos war ein signifikanter negativer Prädiktor für
+> den Verbrauch, $b = -5.34$, $p < .001$, $R^2 = .75$.
+
+# 17. F-Test
+
+Frage:
+
+Erklärt das Gesamtmodell signifikant Varianz?
+
+## Teststatistik:
+
+$$F = \frac{\sigma^2_{Regression}}{\sigma^2_{Fehler}}$$
+
+## Interpretation
+
+Großes $F$:
+
+- Modell erklärt viel Varianz
+- eher signifikant
+
+Kleines $F$:
+
+- Modell erklärt kaum mehr als Zufall
+- nicht signifikant
+
+## Freiheitsgrade
+
+### Zählerfreiheitsgrade
+
+Anzahl der Prädiktoren:
+
+$$df_1 = p$$
+
+### Nennerfreiheitsgrade
+
+$$df_2 = n-p-1$$
+
+mit:
+
+- $p$ = Anzahl Prädiktoren
+- $n$ = Stichprobengröße
+
+## standadisierte Koeffizienten
+
+### Beta-Gewichte $\beta$
+
+Vorteil:
+
+- Variablen vergleichbar
+- einheitenunabhängig
+
+Bei z-standadisierten Variablen:
+
+$$\beta = r$$
+
+(gilt bei einfacher Regression)
+
+## APA-Bericht
+
+> Das Regressionsmodell war signifikant,
+> $F(1,30) = 91.38, p<.001,R^2 = .75$
+
+## Zusammenhang mit $R^2$
+
+Ein großes $F$ führt häufig auch zu einem großen $R^2$.
+
+- großes $F$ → Modell erklärt viel Varianz
+
+- kleines $F$ → Modell erklärt kaum zusätzliche Varianz
+
+## F-Test in R
+
+```{r}
+modell <- lm(mpg ~ wt, data = mtcars)
+
+summary(modell)
+```
+
+Der F-Wert steht im unteren Teil der Ausgabe:
+
+``` text
+F-statistic: 91.38 on 1 and 30 DF
+```
+
+# 18. Chi-Quadrat-Test ($\chi^2$)
+
+## Ziel
+
+Analyse nominalskalierter Daten (Häufigkeiten)
+
+Fragen:
+
+- weichen beobachtete Häufigkeiten von erwarteten Häufigkeiten ab?
+- besteht ein Zusammenhang zwischen zwei nominalskalierten Variablen?
+
+## Grundidee
+
+Der Chi-Quadrat-Test vergleicht:
+
+- beobachtete Häufigkeiten
+- erwartete Häufigkeiten unter $H_0$
+
+Wenn die Abweichungen groß sind:
+
+- großer $\chi^2$-Wert
+- kleiner $p$-Wert
+- Ergebnis eher signifikant
+
+Wenn beobachetete und erwartete Häufigkeiten ähnlich sind:
+
+- kleiner $\chi^2$-Wert
+- großer $p$-Wert
+
+## Eigenschaften
+
+Non-parametrischer Test, also:
+
+- keine Mittelwerte oder Varianzen nötig
+- keine Normalverteilung nötig
+- geeignet für nominalskalierte Variablen
+
+## Chi-Quadrat-Test für eine Variable
+
+(auch Anpassungstest oder Goodness-of-Fit-Test)
+
+### Ziel
+
+Prüfen, ob eine beobachete Häufigkeitsverteilung von einer erwarteten
+Verteilung abweicht
+
+Beispiel:
+
+- Jahreszeiten gleich häufig?
+- Parteien gleich häufig gewählt?
+
+### Nullhypothese
+
+oft:
+
+$$ 
+H_0:\text{ Gleichverteilung}$$
+
+allgemein:
+
+$$H_0:\text{ beobachtete Häufigkeiten entsprechen den erwarteten Häufigkeiten}$$
+
+### Alternativhypothese
+
+$$H_1:\text{ Verteilung weicht ab}$$
+
+Omnibus-Hypothese:
+
+- sagt nur: irgendein Unterschied existiert
+- keine Richtung
+
+### Erwartete Häufigkeiten
+
+### Bei Gleichverteilung:
+
+$$f_{e,i} = \frac{N}{k}$$
+
+mit $N$ = Stichprobengröße und $k$ = Anzahl der Kategorien
+
+### Bei vorgegebenen Anteilen
+
+$$f_e,i = N \cdot P_i$$
+
+mit $P_i$ = erwarteter Anteil
+
+### Teststatistik
+
+$$\chi^2 = \sum_{i=1}^k \frac{(f_{b,i}-f_{e,i})^2}{f_{e,i}}$$
+
+mit $f_b$ = beobachtete Häufigkeit und $f_e$ = erwartete Häufigkeit
+
+#### Logik der Formel
+
+Quadrierung:
+
+- verhindert Aufhebung positiver und negativer Abweichungen
+
+Division durch erwartete Häufigkeit:
+
+- Standardisierung
+  - gleiche Abweichung ist bei kleinen erwarteten Häufigkeiten
+    bedeutsamer als bei großen
+
+Beispiel:
+
+- Abweichung 8 bei erwarteten 10 → groß
+- Abweichung 8 bei erwarteten 1000 → klein
+
+#### Interpreation von $\chi^2$
+
+Kleines $\chi^2$:
+
+- beobachtete und erwartete Häufigkeiten ähnlich
+- spricht eher für $H_0$
+
+Großes $\chi^2$
+
+- starke Abweichungen
+- spricht gegen $H_0$
+
+### Freiheitsgrade
+
+$$df = k-1 $$
+
+Wenn:
+
+- $k-1$ Häufigkeiten bekannt
+
+Dann:
+
+- letzte Häufigkeit festgelegt
+
+### Chi-Quadrat-Verteilung
+
+Eigenschaften:
+
+- rechtsschief
+- nur positive Werte möglich
+- Form abhängig von Freiheitsgraden
+
+Grund:
+
+- Quadrierung verhindert negative Werte
+
+## Effektgröße $w$
+
+### Ziel
+
+Standardisierte Effektgröße unabhängig von $N$
+
+### Formel
+
+$$w = \sqrt{\sum_{i=1}^k \frac{(P_{b,i}-P_{e,i})^2}{P_{e,i}}}$$
+
+Alternative:
+
+$$\sqrt{\frac{\chi^2}{N}}$$
+
+### Interpretation nach Cohen
+
+| $w$ | Interpretation   |
+|-----|------------------|
+| 0.1 | kleiner Effekt   |
+| 0.3 | mittlerer Effekt |
+| 0.5 | großer Effekt    |
+
+### Power beim $\chi^2$-Test
+
+Einflussfaktoren sind:
+
+- Effektgröße $w$
+- Stichprobengröße
+- Signifikanzniveau $\alpha$
+- Freiheitsgrade
+
+### Wichtig
+
+Kleine erwartete Häufigkeiten:
+
+- geringere Power
+- höheres Risiko für $\beta$-Fehler
+
+## Chi-Quadrat-Test für zwei Variablen
+
+(Test auf Unabhängigkeit)
+
+### Ziel
+
+Prüfen, ob zwei nominalskalierte Variablen zusammenhängen
+
+Beispiel:
+
+- Geschlecht x Partei
+- Studienfach x Lebensziel
+
+### Kreuztabellen / Kontingenztafeln
+
+Darstellung gemeinsamer Häufigkeiten zweier Variablen
+
+- Zeilen = Variable 1
+- Spalten = Variable 2
+- Zellen = Kombination
+
+### Nullhypothese
+
+$$H_0:\text{ Variablen sind unabhängig}$$
+
+### Alternativhypothese
+
+$$H_1:\text{ Variablen hängen zusammen}$$
+
+Wichtig:
+
+- keine Aussage über Richtung
+- nur: irgendein Zusammenhang
+
+### Erwartete Häufigkeiten
+
+Unter Unabhängigkeit:
+
+$$f_{e,i,j} = \frac{\text{Zeilenhäufigkeit}\cdot \text{Spaltenhäufigkeit}}{N}$$
+
+### Teststatistik
+
+$$\chi^2 = \sum_{i=1}^k \sum_{j=1}^m \frac{(f_{b,ij}-f_{e,ij})^2}{f_{e,ij}}$$
+
+### Freiheitsgrade
+
+$$df = (k-1)(m-1)$$
+
+| Symbol | Bedeutung      |
+|--------|----------------|
+| $k$    | Anzahl Zeilen  |
+| $m$    | Anzahl Spalten |
+
+### Interpretation
+
+Großes $\chi^2$:
+
+- starke Abweichung von Unabhängigkeit
+- spricht für Zusammenhang
+
+Kleines $\chi^2$:
+
+- beobachtete Häufigkeiten ähnlich zu erwarteten Häufigkeiten
+- spricht eher für Unabhängigkeit
+
+## Effektgrößen bei zwei Variablen
+
+### Phi-Koeffizient $\phi$
+
+Nur bei:
+
+- 2 x 2 Tabellen
+- zwei dichotome Variablen
+
+Formel:
+
+$$\phi = \sqrt{\frac{\chi^2}{N}}$$
+
+Interpretation wie Korrelation $r$
+
+| $\phi$ | Interpretation   |
+|--------|------------------|
+| 0.1    | kleiner Effekt   |
+| 0.3    | mittlerer Effekt |
+| 0.5    | großer Effekt    |
+
+### Cramers $V$ / selten auch Cramers $\phi$
+
+Wenn mindestens eine Variable mehr als zwei Ausprägungen besitzt
+
+$$V = \sqrt{\frac{\chi^2}{N \cdot df_{kleiner}}}$$
+
+mit:
+
+$$df_{kleiner}=\min(k-1,m-1)$$
+
+#### Eigenschaften von Cramers $V$
+
+- Werte zwischen 0 und 1
+- berücksichtigt Tabellengröße
+- gebräuchliste Effektgröße bei größeren Kreuztabellen
+
+### Zusammenhang der Effektgrößen
+
+Bei Vierfeldertafel:
+
+$$\phi = w $$
+
+Bei $df_{kleiner} = 1$
+
+$$V = w$$
+
+### Voraussetzungen
+
+1.  Eindeutige Zuordnung
+
+- Jede Person darf nur:
+  - genau einer Kategorie
+  - bzw. einer Zellkombination
+
+zugeordnet werden
+
+2.  Unabhängige Beobachtungen
+
+keine mehrfachen Messungen derselben Person
+
+3.  Mindesthäufigkeiten
+
+Ungefähr:
+
+- erwartete Häufigkeit in 80% der Zellen \> 5
+- keine erwartete Häufigkeit \< 1
+
+## Wichtige Hinweise
+
+Chi-Quadrat-Test zeigt keinen kausalen Zusammenhang
+
+Ein signifikanter Zusammenhang bedeutet nicht:
+
+- Ursache-Wirkung
+- Zusammenhang $\neq$ Stärke
+
+Ein signifikanter Zusammenhang kann:
+
+- praktisch klein sein
+
+deshalb:
+
+- Effektgröße berichten
+
+## APA-Bericht
+
+> Zwischen Geschlecht und Lebensziel bestand ein signifikanter
+> Zusammenhang, $\chi^2(2, N = 84) = 27.15, p < .001, V = .57$
+
+## R-Code
+
+### Chi-Quadrat-Test für eine Variable
+
+Beispiel:
+
+Prüfen, ob die drei Gruppen im Datensatz `PlantGrowth` gleich häufig
+vorkommen.
+
+```{r}
+table(PlantGrowth$group)
+```
+
+### Gleichverteilung testen
+
+```{r}
+chisq.test(table(PlantGrowth$group))
+```
+
+→ prüft, ob die Gruppen gleich häufig verteilt sind
+
+### Eigene erwartete Wahrscheinlichkeiten
+
+```{r}
+chisq.test(table(PlantGrowth$group),
+           p = c(.5, .25, .25))
+```
+
+→ prüft, ob die beobachteten Häufigkeiten zu den erwarteten Anteilen
+passen
+
+### Chi-Quadrat-Test für zwei Variablen
+
+Beispiel mit `mtcars`:
+
+- `cyl` = Anzahl Zylinder
+- `am` = Schaltung
+  - 0 = automatisch
+  - 1 = manuell
+
+```{r}
+table(mtcars$cyl,
+      mtcars$am)
+```
+
+→ erstellt eine Kreuztabelle
+
+### Chi-Quadrat-Test berechnen
+
+```{r}
+chisq.test(table(mtcars$cyl,
+                 mtcars$am))
+```
+
+→ prüft, ob Zusammenhang zwischen Zylinderzahl und Schaltung besteht
+
+### Erwartete Häufigkeiten anzeigen
+
+```{r}
+test <- chisq.test(table(mtcars$cyl,
+                         mtcars$am))
+
+test$expected
+```
+
+→ zeigt die erwarteten Häufigkeiten unter $H_0$
+
+### Erweiterte Kreuztabelle
+
+```{r}
+library(gmodels)
+
+CrossTable(mtcars$cyl,
+           mtcars$am,
+           expected = TRUE,
+           chisq = TRUE)
+```
+
+→ zeigt beobachtete und erwartete Häufigkeiten sowie den
+Chi-Quadrat-Test
+
+### Fisher-Exact-Test
+
+Bei kleinen erwarteten Häufigkeiten:
+
+```{r}
+fisher.test(table(mtcars$cyl,
+                 mtcars$am))
+```
+
+→ exakter Test für Zusammenhang in Kreuztabellen
+
+### Hinweis
+
+Wenn erwartete Häufigkeiten zu klein sind, gibt R oft folgende Warnung
+aus:
+
+``` text
+Chi-squared approximation may be incorrect
+```
+
+Dann kann ein exakter Test sinnvoller sein.
+
+# 19. Resampling-Verfahren und non-parametrische Tests
+
+## 19.1 Problem parametrischer Tests
+
+Parametrische Tests (z. B. t-Test, ANOVA, Regression) setzen häufig
+voraus:
+
+- Normalverteilung
+- Varianzhomogenität
+- intervallskalierte Daten
+- unabhängige Beobachtungen
+
+Bei starken Verletzungen:
+
+- p-Werte können falsch werden
+- $\alpha$ und $\beta$-Fehler weichen ab
+- klassische Prüfverteilungen (t-, F-Verteilung) sind evtl. unangemessen
+
+Alternativen:
+
+- Resampling-Verfahren
+- non-parametrische Tests
+
+## 19.2 Grundidee von Resampling
+
+### Idee
+
+Nicht:
+
+- theoretische Stichprobenverteilung ableiten
+
+sondern:
+
+- empirische Stichprobenverteilung simulieren
+
+Dazu werden aus der vorhandenen Stichprobe wiederholt neue Stichproben
+gezogen.
+
+Die Stichprobe wird dabei als Annäherung an die Population behandelt.
+
+### Ziehen mit Zurücklegen
+
+Dadurch:
+
+- kann ein Fall mehrfach vorkommen
+- manche Fälle kommen gar nicht vor
+
+So entstehen viele leicht unterschiedliche Stichproben.
+
+### Ziel
+
+Erzeugung einer empirischen Stichprobenverteilung für:
+
+- Mittelwerte
+- Mediane
+- Korrelationen
+- Regressionskoeffizienten
+- Effektgrößen
+- beliebige andere Kennwerte
+
+Großer Vorteil:
+
+- auch für Kennwerte möglich, für die keine theoretische
+  Stichprobenverteilung existiert
+
+## 19.3 Bootstrap
+
+### Grundidee
+
+Bootstrap erzeugt viele neue Stichproben aus der Originalstichprobe.
+Damit simuliert Bootstrap das wiederholte Ziehen vieler Stichproben aus
+der Population.
+
+Für jede Bootstrap-Stichprobe wird ein Kennwert berechnet.
+
+Die Verteilung dieser Kennwerte ergibt die:
+
+- Bootstrap-Stichprobenverteilung
+
+> Bootstrap erzeugt empirisch eine Stichprobenverteilung, anstatt sie
+> theoretisch herzuleiten.
+
+```{r}
+# Bootstrap-Paket
+library(boot)
+```
+
+| Parametrische Verfahren        | Bootstrap                           |
+|--------------------------------|-------------------------------------|
+| theoretische Prüfverteilung    | empirische Stichprobenverteilung    |
+| stärkere Voraussetzungen       | weniger restriktive Voraussetzungen |
+| oft Normalverteilung notwendig | keine Verteilungsannahmen notwendig |
+
+### Ablauf des Bootstrap
+
+1.  Originalstichprobe mit Größe $n$
+
+2.  Ziehe viele neue Stichproben der Größe $n$
+
+    - mit Zurücklegen
+
+3.  Berechne pro Stichprobe den Kennwert
+
+4.  Wiederhole das sehr oft
+
+    - häufig:
+
+      - 1000
+      - 5000
+      - 10000
+
+5.  Nutze die Verteilung der Kennwerte:
+
+    - Standardfehler
+    - Konfidenzintervalle
+    - Bias-Schätzung
+
+### Bootstrap-Konfidenzintervall
+
+Konfidenzintervalle werden über Quantile bestimmt.
+
+Beispiel:
+
+95%-KI:
+
+- untere Grenze:
+  - 2.5%-Quantil
+- obere Grenze:
+  - 97.5%-Quantil
+
+``` r
+boot.ci(boot.obj, type = "bca")
+```
+
+- `bca` = bias corrected accelerated
+- häufig verwendete Bootstrap-Methode
+
+### Vorteile des Bootstrap
+
+- keine Normalverteilung notwendig
+- flexibel
+- für fast beliebige Kennwerte nutzbar
+- gut bei kleinen / schiefen Verteilungen
+- keine theoretische Stichprobenverteilung nötig
+
+### Nachteile
+
+- Stichprobe sollte repräsentativ sein
+- rechenintensiver
+- schlechte Stichprobe → schlechter Bootstrap
+
+### Typische Anwendungen
+
+- Konfidenzintervalle
+- Standardfehler
+- Bias-Schätzung
+- Signifikanztests
+
+### R-Code
+
+```{r}
+library(boot)
+
+daten <- mtcars
+```
+
+#### Mittelwert
+
+Bootstrap-KI für:
+
+$$\bar{x}$$
+
+```{r}
+# Funktion für Bootstrap-Mittelwert
+mean.fun <- function(daten, i) {
+  mean(daten$mpg[i], na.rm = TRUE)
+}
+
+# Bootstrap-Objekt erstellen
+mean.obj <- boot(daten,
+                 mean.fun,
+                 R = 2000)
+
+# Bootstrap-Output anzeigen
+mean.obj
+
+# Konfidenzintervall berechnen
+boot.ci(mean.obj, type = "bca")
+```
+
+→ berechnet ein Bootstrap-Konfidenzintervall für den Mittelwert von
+`mpg`
+
+#### Median
+
+Bootstrap besonders sinnvoll, da für Median klassische Verfahren
+schwieriger sind.
+
+```{r}
+# Funktion für Bootstrap-Median
+median.fun <- function(daten, i){
+  median(daten$mpg[i], na.rm = TRUE)
+}
+
+# Bootstrap-Objekt
+median.obj <- boot(daten,
+                   median.fun,
+                   R = 2000)
+
+# Konfidenzintervall
+boot.ci(median.obj, type = "bca")
+```
+
+→ berechnet ein Bootstrap-Konfidenzintervall für den Median von `mpg`
+
+#### Standardabweichung
+
+```{r}
+# Funktion für Bootstrap-SD
+sd.fun <- function(daten, i){
+  sd(daten$mpg[i], na.rm = TRUE)
+}
+
+# Bootstrap-Objekt
+sd.obj <- boot(daten,
+               sd.fun,
+               R = 2000)
+
+# 90%-Konfidenzintervall
+boot.ci(sd.obj,
+        type = "bca",
+        conf = .90)
+```
+
+→ berechnet ein 90%-Bootstrap-Konfidenzintervall für die
+Standardabweichung von `mpg`
+
+#### Korrelation
+
+Bootstrap-KI für:
+
+$r$
+
+```{r}
+# Funktion für Bootstrap-Korrelation
+cor.fun <- function(daten, i) {
+  cor(daten$mpg[i],
+      daten$wt[i],
+      use = "pairwise.complete.obs")
+}
+
+# Bootstrap-Objekt
+cor.obj <- boot(daten,
+                cor.fun,
+                R = 2000)
+
+# Konfidenzintervall
+boot.ci(cor.obj,
+        type = "bca")
+```
+
+→ berechnet ein Bootstrap-Konfidenzintervall für die Korrelation
+zwischen `mpg` und `wt`
+
+#### Regression
+
+Bootstrap-KI für:
+
+- $b$-Gewichte
+
+```{r}
+# Funktion für Bootstrap-b
+b.fun <- function(daten, i){
+  summary(
+    lm(mpg[i] ~ wt[i],
+       data = daten)
+  )$coefficients[2,1]
+}
+
+# Bootstrap-Objekt
+b.obj <- boot(daten,
+              b.fun,
+              R = 2000)
+
+# Konfidenzintervall
+boot.ci(b.obj,
+        type = "bca")
+```
+
+→ berechnet ein Bootstrap-Konfidenzintervall für das Regressionsgewicht
+von `wt`
+
+- $R^2$
+
+```{r}
+# Funktion für Bootstrap-R²
+r2.fun <- function(daten, i){
+  summary(
+    lm(mpg[i] ~ wt[i],
+       data = daten)
+  )$r.squared
+}
+
+# Bootstrap-Objekt
+r2.obj <- boot(daten,
+               r2.fun,
+               R = 2000)
+
+# Konfidenzintervall
+boot.ci(r2.obj,
+        type = "bca")
+```
+
+→ berechnet ein Bootstrap-Konfidenzintervall für ( R\^2 )
+
+## 19.4 Randomisierungstests (Permutationstests)
+
+### Grundidee
+
+Randomisierungstests sind Resampling-Verfahren für Signifikanztests.
+
+Ziel:
+
+- empirische Nullverteilung erzeugen
+
+statt theoretischer Prüfverteilung.
+
+```{r}
+# Gruppenzugehörigkeit zufällig permutieren
+gruppe <- PlantGrowth$group
+
+sample(gruppe)
+```
+
+### Idee der Nullhypothese
+
+Wenn $H_0$ wahr ist:
+
+→ Gruppenzugehörigkeit sollte egal sein.
+
+Deshalb:
+
+- Werte zufällig neu auf Gruppen verteilen
+- Teststatistik berechnen
+- sehr oft wiederholen
+
+Dadurch entsteht die Nullverteilung.
+
+### Ablauf
+
+1.  beobachtete Teststatistik berechnen
+
+2.  Daten zufällig permutieren
+
+3.  neue Teststatistik berechnen
+
+4.  viele Wiederholungen
+
+5.  prüfen:
+
+    - wie extrem ist der beobachtete Wert?
+
+### p-Wert
+
+Anteil der permutierten Werte, die mindestens so extrem sind wie der
+beobachtete Wert.
+
+### Vorteile
+
+- keine Verteilungsannahmen
+- sehr flexibel
+- oft robuster als parametrische Tests
+
+### Einfacher Permutationstest für Mittelwertsdifferenz
+
+```{r}
+daten <- subset(PlantGrowth,
+                group %in% c("ctrl", "trt1"))
+```
+
+```{r}
+# beobachtete Mittelwertsdifferenz
+obs.diff <- mean(daten$weight[daten$group == "ctrl"]) -
+            mean(daten$weight[daten$group == "trt1"])
+
+obs.diff
+```
+
+→ tatsächlicher Unterschied zwischen den Gruppenmittelwerten
+
+```{r}
+# Anzahl Permutationen
+B <- 5000
+
+# Vektor für permutierte Teststatistiken
+perm.diff <- numeric(B)
+
+for(i in 1:B){
+
+  # Gruppenlabels zufällig mischen
+  perm.gruppe <- sample(daten$gruppe)
+
+  # neue Mittelwertsdifferenz
+  perm.diff[i] <-
+    mean(daten$weight[perm.gruppe == "ctrl"]) -
+    mean(daten$weight[perm.gruppe == "trt1"])
+}
+
+# empirischer p-Wert
+mean(abs(perm.diff) >= abs(obs.diff))
+```
+
+→ berechnet den empirischen p-Wert des Permutationstests
+
+## 19.5 Unterschied Bootstrap vs. Randomisierungstest
+
+| Bootstrap                      | Randomisierungstest                 |
+|--------------------------------|-------------------------------------|
+| Schätzung von Parametern       | Testen von Hypothesen               |
+| Fokus auf Konfidenzintervallen | Fokus auf p-Werten                  |
+| Ziehen mit Zurücklegen         | häufig Permutation ohne Zurücklegen |
+| „Wie groß ist der Effekt?“     | „Ist der Effekt zufällig?“          |
+
+## 19.6 Non-parametrische Tests
+
+### Grundidee
+
+Non-parametrische Tests wurden ursprünglich für ordinalskalierte Daten
+entwickelt.
+
+Nicht mit Rohwerten rechnen,
+
+sondern mit:
+
+- Rangplätzen
+
+### Rangbildung
+
+Kleinster Wert:
+
+\$ Rang = 1 \$
+
+größter Wert:
+
+\$ Rang = n \$
+
+Bei gleichen Werten:
+
+- mittlere Rangplätze vergeben
+
+### Vorteile
+
+- keine Normalverteilung notwendig
+- auch für ordinale Daten geeignet
+- robust gegen Ausreißer
+- Bei deutlichen Verletzungen der Voraussetzungen können
+  non-parametrische Verfahren eine höhere Power besitzen als
+  parametrische Verfahren.
+
+### Nachteile
+
+- Informationsverlust
+- geringere Aussagekraft über echte Mittelwerte, da nur Aussagen über
+  Rangplätze, nicht über tatsächliche Mittelwerte getroffen werden.
+- manchmal geringere Power
+- Wenn die Voraussetzungen parametrischer Tests erfüllt sind, haben
+  parametrische Verfahren häufig die höhere Power.
+
+### R-Code
+
+```{r}
+x <- c(12, 5, 20, 12, 8)
+
+rank(x)
+```
+
+→ berechnet die Rangplätze der Werte
+
+#### Umgang mit gleichen Werten (`ties`)
+
+```{r}
+rank(x,
+     ties.method = "average")
+```
+
+→ gleiche Werte erhalten den durchschnittlichen Rangplatz
+
+#### Weitere Möglichkeiten für `ties.method`
+
+| Methode     | Bedeutung                  |
+|-------------|----------------------------|
+| `"average"` | mittlerer Rang             |
+| `"first"`   | Reihenfolge des Auftretens |
+| `"min"`     | kleinster Rang             |
+| `"max"`     | größter Rang               |
+| `"random"`  | zufälliger Rang            |
+
+## 19.7 Wichtige non-parametrische Tests
+
+| Parametrischer Test  | Non-parametrisches Pendant |
+|----------------------|----------------------------|
+| t-Test unabhängig    | Mann-Whitney-U-Test        |
+| t-Test abhängig      | Wilcoxon-Test              |
+| einfaktorielle ANOVA | Kruskal-Wallis-Test        |
+| Pearson-Korrelation  | Spearman-Rangkorrelation   |
+
+## 19.8 Mann-Whitney-U-Test
+
+### Einsatz
+
+Vergleich von:
+
+- zwei unabhängigen Gruppen
+
+Alternative zu:
+
+- t-Test für unabhängige Stichproben
+
+### Idee
+
+- alle Werte gemeinsam in Ränge umwandeln
+- kleine U-Werte → starke Gruppenunterschiede
+- basiert auf Rangsummen statt Mittelwerten
+- Rangsummen vergleichen
+
+### Formel
+
+$$U = n_1n_2 + \frac{n_1(n_1+1)}{2} - R_1$$
+
+mit:
+
+- $n_1$ = Gruppengröße Gruppe 1
+- $n_2$ = Gruppengröße Gruppe 2
+- $R_1$ = Rangsumme Gruppe 1
+
+### Hypothesen
+
+$$H_0:
+\text{Gruppen unterscheiden sich nicht}$$
+
+### R-Code
+
+```{r}
+daten <- subset(PlantGrowth,
+                group %in% c("ctrl", "trt1"))
+```
+
+``` r
+# ungerichtet 
+wilcox.test(weight ~ group,
+            data = daten)
+```
+
+→ prüft, ob sich die Gruppen unterscheiden
+
+```{r}
+# gerichtet 
+wilcox.test(weight ~ group,
+            data = daten,
+            alternative = "greater")
+```
+
+→ prüft, ob Gruppe 1 größere Werte besitzt
+
+## 19.9 Wilcoxon-Test
+
+### Einsatz
+
+Vergleich von:
+
+- zwei abhängigen Messungen
+
+Alternative zu:
+
+- t-Test für abhängige Stichproben
+
+### Idee
+
+- Differenzen berechnen
+- Beträge der Differenzen ranken
+- positive vs. negative Rangsumme vergleichen
+
+$$W = \sum R_+$$
+
+mit $R_+$ = positive Ränge
+
+### R-Code
+
+```{r}
+x1 <- mtcars$mpg
+x2 <- mtcars$mpg * 0.425
+```
+
+``` r
+wilcox.test(x1,
+            x2,
+            paired = TRUE)
+```
+
+→ prüft, ob sich die beiden abhängigen Messreihen unterscheiden
+
+```{r}
+# gerichteter Test
+wilcox.test(x1,
+            x2,
+            paired = TRUE,
+            alternative = "greater")
+```
+
+→ prüft, ob die Werte von `x1` tendenziell größer sind
+
+## 19.10 Kruskal-Wallis-Test
+
+### Einsatz
+
+Vergleich von:
+
+- mehr als zwei unabhängigen Gruppen
+
+Alternative zu:
+
+- einfaktorielle ANOVA
+
+### Idee
+
+- Werte in Ränge umwandeln
+- Rangmittelwerte / Rangsummen vergleichen
+
+### Formel
+
+$$H = \frac{12}{N(N+1)} \sum_{j=1}^k \frac{R_j^2}{n_j} -3(N+1)$$
+
+mit:
+
+- $R_j$ = Rangsumme Gruppe $j$
+- $n_j$ = Gruppengröße
+- $N$ = Gesamtstichprobe
+
+### Interpretation
+
+- großes $H$ → Gruppen unterscheiden sich
+- analog zur ANOVA auf Rangbasis
+
+```{r}
+kruskal.test(weight ~ group,
+             data = PlantGrowth)
+```
+
+→ prüft, ob sich mindestens eine Gruppe von den anderen unterscheidet
+
+## 19.11 Spearman-Rangkorrelation
+
+### Einsatz
+
+Zusammenhang zwischen ordinalen Variablen
+
+Alternative zu:
+
+- Pearson-Korrelation
+
+### Idee
+
+Korrelation der Rangplätze statt der Rohwerte.
+
+### Formel
+
+$$r_s $$
+
+$$\frac{6 \sum d_i^2}{n(n^2-1)}$$
+
+$$r_s = 1 - \frac{6\sum d_i^2}{n(n^2-1)}$$
+
+```{r}
+cor(mtcars$mpg,
+    mtcars$wt,
+    method = "spearman")
+```
+
+→ berechnet die Spearman-Rangkorrelation
+
+## Rangkorrelation direkt über Ränge
+
+```{r}
+cor(rank(mtcars$mpg),
+    rank(mtcars$wt))
+```
+
+→ berechnet die Pearson-Korrelation der Rangplätze
+
+## Signifikanztest
+
+```{r}
+cor.test(mtcars$mpg,
+         mtcars$wt,
+         method = "spearman")
+```
+
+→ prüft, ob die Rangkorrelation signifikant von 0 verschieden ist
+
+## 19.14 Wann welches Verfahren?
+
+| Situation                             | Verfahren                       |
+|---------------------------------------|---------------------------------|
+| Voraussetzungen erfüllt               | parametrischer Test             |
+| starke Verletzung der Voraussetzungen | Bootstrap                       |
+| ordinale Daten                        | non-parametrische Tests         |
+| kleine / schiefe Stichproben          | Bootstrap oder non-parametrisch |
+| robuste Alternative gesucht           | Resampling                      |
+
+Wenn ursprünglich ein parametrisches Verfahren geplant war, wird heute
+häufig Bootstrap anstelle non-parametrischer Verfahren bevorzugt.
+
+# 20. Kritik am NHST (Vertiefung)
+
+## 20.1 Grundidee der Kritk
+
+Das klassische Nullhypothesen-Signifikanztesten (NHST) ist der
+Standardansatz der Inferenzstatistik in vielen empirischen
+Wissenschaften.
+
+Dabei wird geprüft, ob ein beobachteter Effekt unter Annahme der
+Nullhypothese unwahrscheinlich wäre.
+
+Der zentrale Kennwert ist der p-Wert:
+
+$$p(Daten|H_0)$$
+
+Der p-Wert gibt die Wahrscheinlichkeit an, die beobachteten Daten (oder
+extremere Daten) zu erhalten, wenn die Nullhypothese wahr ist.
+
+Das NHST steht jedoch seit Jahrzehnten in der Kritik. Besonders bekannt
+wurde die Kritik durch:
+
+- Cohen (1994): "The Earth Is Round(\<.05)"
+- Wasserstein et al. (2019) "Moving to a World Beyond p\<.05)"
+
+## 20.2 Zentrale Fehlinterpretationen des p-Werts
+
+Der p-Wert ist NICHT:
+
+- die Wahrscheinlichkeit, dass $H_0$ wahr ist
+- die Wahrscheinlichkeit, dass $H_1$ wahr ist
+- die Wahrscheinlichkeit, dass die Daten "durch Zufall" entstanden sind
+- ein Maß für die Größe eines Effekts
+- ein Maß für praktische Relevanz
+- ein Maß für Replizierbarkeit
+
+Der p-Wert liefert nur:
+
+$$p(Daten|H_0)$$
+
+und NICHT:
+
+$$p(H_0|Daten)$$
+Ein einzelner p-Wert enthält wenig Information.
+
+Selbst bei identischem Populationseffekt streuen p-Werte stark zwischen
+Replikationen.
+
+→ signifikante Ergebnisse können zufällig stark schwanken
+
+Cumming zeigt:
+
+- hohe Variabilität von p-Werten
+- geringe Replizierbarkeit einzelner Ergebnisse
+
+## 20.3 Probleme des NHST
+
+### 20.3.1 Dichotomes Denken
+
+Im NHST wird meist eine künstliche Grenze verwendet:
+
+$$\alpha = 0.05$$
+
+Dann gilt:
+
+- $p < 0.05$ → "signifikant"
+- $p > 0.05$ → "nicht signifikant
+
+Problem:
+
+Ein Ergebnis mit:
+
+$$p = 0.049$$
+
+wird völlig anders behandelt als:
+
+$$p = 0.051$$
+
+obwohl praktisch überhaupt kein Unterschied besteht.
+
+Wasserstein et al.:
+
+> Die Differenz zwischen „signifikant“ und „nicht signifikant“ ist
+> selbst nicht signifikant.
+
+### 20.3.2 Abhängigkeit von der Stichprobengröße
+
+Der p-Wert hängt stark von $n$ ab.
+
+Große Stichproben:
+
+- kleine Effekte werden signifikant
+
+Kleine Stichproben:
+
+- selbst relevante Effekte werden evtl. nicht signifikant
+
+Deshalb bedeutet Signifikanz nicht automatisch:
+
+- großer Effekt
+- wichtiger Effekt
+- relevanter Effekt
+
+### 20.3.4 Unrealistische Nullhypothesen
+
+Im NHST wird oft geprüft:
+
+$$H_0: Effekt = 0$$
+
+Solche exakten Nullhypothesen sind in vielen realen Situationen
+unrealistisch.
+
+Beispiel:
+
+Zwischen zwei psychologischen Variablen existiert fast immer irgendein
+minimaler Zusammenhang. Daher oft wenig informative Hypothese.
+
+Die Frage sollte oft eher sein:
+
+- Wie groß ist der Effekt?
+- Ist er praktisch relevant?
+
+statt:
+
+- Ist der Effekt exakt 0?
+
+Cohen (1994) bezeichnete solche Nullhypothesen als häufig wenig
+informativ.
+
+### 20.3.4 Signifikanz $\neq$ praktische Relevanz
+
+Ein statistisch signifikanter Effekt kann praktisch völlig irrelevant
+sein.
+
+Beispiel:
+
+Ein Medikament verbessert einen Wert statistisch signifikant, aber nur
+minimal.
+
+Dann ist der Effekt zwar statistisch nachweisbar, aber praktisch
+bedeutungslos.
+
+Der p-Wert allein liefert keine Information über die Größe oder
+Wichtigkeit eines Effekts.
+
+### 20.3.5 Replikationskrise
+
+Viele veröffentlichte Ergebnisse lassen sich nicht replizieren.
+
+Das bedeutet:
+
+Spätere Studien finden denselben Effekt nicht erneut.
+
+Mögliche Ursachen:
+
+- geringe Teststärke (Power)
+- kleine Stichproben
+- kleine Effektgrößen → geringe Power
+- p-Hacking
+- HARKing
+- Publication Bias
+  - Nicht-signifikante Ergebnisse verschwinden in der „Schublade“.
+- selektive Berichterstattung / Positivity Bias
+  - Positive / signifikante Ergebnisse werden bevorzugt publiziert.
+- Überinterpretation einzelner signifikanter Ergebnisse
+
+#### Unterschied HARKing vs. p-Hacking
+
+HARKing: Hypothesizing after Results are Known
+
+| Begriff   | Bedeutung                                            |
+|-----------|------------------------------------------------------|
+| HARKing   | Hypothese nach Sichtung der Ergebnisse umformulieren |
+| p-Hacking | Analysen/Stichprobe manipulieren bis p \< .05        |
+
+Optional Stopping ist dabei:
+
+→ spezielle Form von p-Hacking.
+
+### 20.3.6 Positive Predictive Value (PPV)
+
+Der positive Vorhersagewert beschreibt:
+
+$$P(H_1|\text{signifikant})$$
+
+also die Wahrscheinlichkeit, dass die Alternativhypothese tatsächlich
+wahr ist, wenn ein signifikantes Ergebnis gefunden wurde.
+
+Das ist etwas völlig anderes als der p-Wert.
+
+Bei realistischen Annahmen kann trotz:
+
+$$p<0.05$$
+
+ein großer Anteil der Ergebnisse falsch positiv sein.
+
+Beispiel aus Sedlmeier & Renkewitz:
+
+- Basisrate korrekter Hypothesen: 10%
+- $\alpha = 0.05$
+
+→ nur etwa:
+
+$$PPV \approx 0.53 $$
+
+Das bedeutet:
+
+Etwa 47 % signifikanter Ergebnisse könnten falsch positiv sein.
+
+Ioannidis:
+
+Viele publizierte Ergebnisse sind falsch positiv.
+
+Ursachen:
+
+- geringe Power
+- Bias
+- kleine Effekte
+- Selektionsprozesse
+
+### 20.3.7 Publication Bias / File Drawer Problem
+
+Signifikante Ergebnisse:
+
+- werden häufiger publiziert
+
+Nicht-signifikante Ergebnisse:
+
+- verschwinden in der „Schublade“
+
+Folge:
+
+- verzerrte Literatur
+- Überschätzung von Effekten
+
+## 20.4 Kritik von Wasserstein et al. (2019)
+
+> „Statistical significance should not determine scientific
+> conclusions.“
+
+Die American Statistical Association (ASA) kritisiert insbesondere:
+
+- starre Signifikanzgrenzen
+- Fehlinterpretationen des p-Werts
+- Überbewertung signifikanter Ergebnisse
+- Vernachlässigung von Unsicherheit
+
+Die Autoren empfehlen:
+
+> “Accept uncertainty. Be thoughtful, open, and modest.”
+
+(ATOM-Prinzip)
+
+# 21 Verbesserungen innerhalb des NHST
+
+Zentrale Kritikpunkte am klassischen NHST
+
+- dichotomes Denken
+- Überbetonung des p-Werts
+- Vernachlässigung praktischer Relevanz
+- Abhängigkeit von Stichprobengröße
+- schlechte Replizierbarkeit
+- Fehlinterpretationen des p-Werts
+- publication bias
+- p-hacking
+
+## Exkurs: Geoff Cumming und die „New Statistics“
+
+Geoff Cumming kritisiert den starken Fokus auf:
+
+- p-Werte
+- dichotome Entscheidungen („signifikant / nicht signifikant“)
+
+Stattdessen betont er:
+
+- Effektgrößen
+- Konfidenzintervalle
+- Replikationen
+- Meta-Analysen
+
+Zentrale Idee:
+
+> Unsicherheit sichtbar machen, statt nur Signifikanzgrenzen zu
+> betrachten.
+
+Bekanntes Konzept:
+
+- „Dance of the p-values“
+
+→ p-Werte schwanken stark zwischen Stichproben, selbst bei gleichem
+wahrem Effekt.
+
+Folge: - einzelne signifikante Studien oft instabil - Replikationen
+wichtig
+
+## 21.1 Effektgrößen berichten
+
+### Grundidee:
+
+Signifikanztests beantworten nur die Frage:
+
+> Ist ein Effekt statistisch nachweisbar?
+
+Sie beantworten NICHT:
+
+> Wie groß ist der Effekt?
+
+### Warum sind Effektgrößen wichtig?
+
+Effektgrößen ermöglichen Aussagen über:
+
+- die praktische Relevanz eines Effekts
+- die Stärke eines Zusammenhangs
+- Vergleiche zwischen Studien
+- Meta-Analysen
+
+Ein kleiner Effekt kann bei großer Stichprobe signifikant werden, obwohl
+er praktisch kaum relevant ist.
+
+Umgekehrt kann ein großer Effekt bei kleiner Stichprobe nicht
+signifikant werden.
+
+### Beispiele für Effektgrößen
+
+| Situation                  | Effektgröße              |
+|----------------------------|--------------------------|
+| Mittelwertsunterschiede    | Cohen's $d$, Hedges' $g$ |
+| Varianzanalyse             | $\eta^2$                 |
+| Korrelationen              | $r$                      |
+| Nominalskalierte Variablen | $\phi$, Cramers $V$      |
+
+Effektgrößen können direkt aus Testergebnissen berechnet werden.
+
+Dadurch können Effekte auch dann bestimmt werden, wenn nur
+Teststatistiken veröffentlicht wurden.
+
+Das ist besonders wichtig für:
+
+- Metaanalysen
+- Vergleich verschiedener Studien
+- Poweranalysen zukünftiger Studien
+
+### R-Code
+
+```{r}
+# Benötigte Pakete
+library(effectsize)
+library(pwr)
+```
+
+#### Effektgröße für einen Einstichproben t-Test
+
+Verwendung:
+
+- Mittelwert vs. vorgegebener Wert
+- Effektgröße aus t-Wert berechnen
+
+$$g = \frac{t}{\sqrt{n}}$$
+
+#### Effektgröße für zwei unabhängige Stichproben
+
+Verwendung:
+
+- Mittelwertsunterschied zweier unabhängiger Gruppen
+- Cohen's $d$ / Hedges' $g$
+
+$$d bzw. g = \frac{\bar{x}_A - \bar{x}_B}{\hat{\sigma}_{AB}}$$
+
+```{r}
+daten <- subset(PlantGrowth,
+                group %in% c("ctrl", "trt1"))
+```
+
+Effektgröße berechnen
+
+```{r}
+cohens_d(weight ~ group,
+         data = daten)
+```
+
+→ berechnet Cohen's $d$ bzw. Hedges' $g$
+
+Anderes Konfidenzniveau
+
+```{r}
+cohens_d(weight ~ group,
+         data = daten,
+         ci = .90)
+```
+
+→ berechnet ein 90%-Konfidenzintervall für die Effektgröße
+
+Effektgröße aus t-Wert berechnen
+
+```{r}
+t_to_d(t = 3.6441,
+       df = 81.956)
+```
+
+→ berechnet Cohen's $d$ aus einem t-Wert und Freiheitsgraden
+
+#### Gepoolte Standardabweichung
+
+Verwendung:
+
+- gemeinsame Streuung beider Gruppen
+- notwendig für Cohen's $d$
+
+$$\hat{\sigma}_{AB}
+=
+\sqrt{
+\frac{
+\hat{\sigma}_A^2(n_A-1)
++
+\hat{\sigma}_B^2(n_B-1)
+}{
+n_A+n_B-2
+}
+}$$
+
+```{r}
+# automatisch in cohens_d()
+cohens_d(weight ~ group,
+         data = daten)
+```
+
+#### Effektgröße aus t-Wert bei unabhängigen Stichproben
+
+Verwendung:
+
+- Effektgröße berechnen, wenn nur Testergebnis vorliegt
+
+$$g
+=
+t
+\sqrt{
+\frac{1}{n_A}
++
+\frac{1}{n_B}
+}$$
+
+äquivalent:
+
+$$g
+=
+t
+\sqrt{
+\frac{n_A+n_B}{n_A n_B}
+}$$
+
+#### Korrelative Effektgröße aus t-Test
+
+Verwendung:
+
+- Zusammenhangsmaß aus t-Test berechnen
+- Interpretation als Korrelation
+
+$$r
+=
+\sqrt{
+\frac{t^2}{t^2+df}
+}$$
+
+```{r}
+t_to_r(t = 2.8, df = 58)
+```
+
+#### Effektgröße für abhängige Stichproben
+
+Verwendung:
+
+- Pre-Post-Vergleiche
+- Messwiederholungen
+- abhängiger t-Test
+
+$$d \space bzw. \space g = \frac{\bar{x}_\text{Differenzwerte}}{\hat{\sigma}_{Differenzwerte}}$$
+
+#### Effektgröße aus t-Wert bei abhängigen Stichproben
+
+Verwendung:
+
+- Effektgröße direkt aus t-Test berechnen
+
+$$g = \frac{t}{\sqrt{n}}$$
+
+#### Korrigierte Effektgröße für abhängige Stichproben
+
+Verwendung:
+
+- Vergleichbarkeit mit unabhängigen Stichproben
+- berücksichtigt Korrelation der Messungen
+
+$$g
+=
+t_{AS}
+\sqrt{
+\frac{2(1-r)}{n}
+}$$
+
+#### Cohens d / Hedges' g bei abhängigen Stichproben
+
+```{r}
+x1 <- mtcars$mpg
+x2 <- mtcars$mpg * 0.425
+```
+
+```{r}
+cohens_d(x1,
+         x2,
+         paired = TRUE)
+```
+
+```{r}
+# abhängige Stichproben aus t-Wert und Freiheitsgraden
+t_to_d(t = 0.28672,
+       df = 83,
+       paired = TRUE)
+```
+
+#### Eta-Quadrat
+
+Verwendung:
+
+- Effektgröße der ANOVA
+- Anteil erklärter Varianz
+
+$$\eta^2
+=
+\frac{
+QS_{zwischen}
+}{
+QS_{gesamt}
+}$$
+
+Interpretation:
+
+- Anteil der Gesamtvarianz, der durch Gruppenzugehörigkeit erklärt wird
+
+#### Zusammenhang zwischen $\eta^2$ und Cohen's $f$
+
+Verwendung:
+
+- Poweranalyse für ANOVA
+- `pwr.anova.test()` nutzt $f$
+
+$$f
+=
+\sqrt{
+\frac{\eta^2}{1-\eta^2}
+}$$
+
+```{r}
+# Eta-Quadrat für ANOVA aus Rohdaten
+modell.aov <- aov(weight ~ group,
+                  data = PlantGrowth)
+
+eta_squared(modell.aov)
+
+# Eta-Quadrat aus F-Wert und Freiheitsgraden
+F_to_eta2(f = 8.523,
+          df = 2,
+          df_error = 81)
+```
+
+#### Phi-Koeffizient
+
+Verwendung:
+
+- Zusammenhang zweier dichotomer Variablen
+- Effektgröße für 2×2-Kontingenztafeln
+
+$$\phi
+=
+\sqrt{
+\frac{\chi^2}{N}
+}$$
+
+#### Cramers $V$
+
+Verwendung:
+
+- Zusammenhang nominalskalierter Variablen
+- Tabellen größer als 2×2
+
+$$V
+=
+\sqrt{
+\frac{\chi^2}{N \cdot df_{kleiner}}
+}$$
+
+```{r}
+# Phi für zwei dichotome nominalskalierte Variablen
+phi(x = mtcars$vs,
+    y = mtcars$am)
+
+# Cramers V für größere Kreuztabellen
+cramers_v(x = mtcars$cyl,
+          y = mtcars$gear)
+
+# Phi aus Chi-Quadrat-Kennwerten
+chisq_to_phi(chisq = 1.6827,
+             nrow = 2,
+             ncol = 2,
+             n = 75)
+
+# Cramers V aus Chi-Quadrat-Kennwerten
+chisq_to_cramers_v(chisq = 27.145,
+                   nrow = 2,
+                   ncol = 3,
+                   n = 84)
+```
+
+#### Effektgrößen bei Regression
+
+#### Cohen's $f^2$
+
+Verwendung:
+
+- Effektgröße der Regression
+- Poweranalyse für Regression
+
+$$f^2
+=
+\frac{R^2}{1-R^2}$$
+
+Interpretation:
+
+- Verhältnis erklärter zu nicht erklärter Varianz
+
+```{r}
+F_to_f2(f = 5.2, df = 1, df_error = 80)
+
+# oder manuell:
+r2 <- 0.25
+r2 / (1 - r2)
+```
+
+### Umrechnung von Effektgrößen
+
+#### Cohen's $d$ in Korrelation $r$
+
+Verwendung:
+
+- Vergleich verschiedener Effektgrößen
+- Metaanalysen
+
+$$r
+=
+\frac{d}{\sqrt{d^2+4}}$$
+
+```{r}
+# Effektgrößen umrechnen
+# Beispiel: d in r
+d_to_r(0.79)
+```
+
+## 21.2 Konfidenzintervalle berichten
+
+### Grundidee:
+
+Ein p-Wert liefert nur eine Ja/Nein-Entscheidung.
+
+### Konfidenzintervalle zeigen:
+
+- plausible Werte für den wahren Effekt (Wenn das Verfahren unendlich
+  oft wiederholt würde, würden 95 % der berechneten Intervalle den
+  wahren Parameter enthalten.)
+- Präzision der Schätzung
+- Unsicherheit der Schätzung
+- praktische Relevanz
+
+Sie liefern also deutlich mehr Information als nur:
+
+- „signifikant“ / „nicht signifikant“
+
+Dadurch entsteht weniger dichotomes Denken.
+
+## 21.3 Poweranalysen durchführen
+
+### Problem
+
+Nicht-signifikante Ergebnisse können entstehen durch:
+
+- tatsächlich keinen Effekt
+- zu kleine Stichprobe
+
+NHST allein kann diese Situationen nicht unterscheiden.
+
+### Lösung: Poweranalyse
+
+Die Power beschreibt die Wahrscheinlichkeit, einen tatsächlich
+vorhandenen Effekt zu entdecken.
+
+$$\text{Power} = 1 - \beta$$
+
+#### Apriori-Poweranalyse
+
+Vor der Studie wird berechnet:
+
+> Wie groß muss die Stichprobe sein?
+
+Benötigt werden:
+
+- erwartete Effektgröße
+- Signifikanzniveau $\alpha$
+- gewünschte Power
+
+Eine Power von mindestens 80 % wird häufig empfohlen.
+:contentReference[oaicite:7]{index="7"}
+
+#### Post-hoc-Poweranalyse
+
+Nach der Studie kann überprüft werden:
+
+> War die Stichprobe groß genug?
+
+Das ist besonders wichtig bei:
+
+- nicht-signifikanten Ergebnissen
+- Untersuchungen kleiner Effekte
+
+### R-Code: Poweranalysen
+
+```{r}
+# Paket laden
+library(pwr)
+```
+
+#### A-priori-Poweranalyse: unabhängiger t-Test
+
+```{r}
+# Benötigtes n pro Gruppe bei erwarteter Effektgröße d
+pwr.t.test(d = 1 / 1.87,
+           sig.level = .05,
+           power = .80,
+           type = "two.sample",
+           alternative = "two.sided")
+
+# Gerichtete Hypothese
+pwr.t.test(d = 1 / 1.87,
+           sig.level = .05,
+           power = .80,
+           type = "two.sample",
+           alternative = "greater")
+```
+
+#### Post-hoc-Poweranalyse: unabhängiger t-Test mit ungleichen Gruppengrößen
+
+```{r}
+# Beispieltest
+t.test(wt ~ am,
+       data = mtcars)
+
+# Power für maximal vernachlässigbaren Effekt d = 1.5 / 8.26
+pwr.t2n.test(n1 = 19,
+             n2 = 13,
+             d = 0.5,
+             sig.level = .05,
+             alternative = "two.sided")
+```
+
+#### A-priori-Poweranalyse: abhängiger t-Test
+
+```{r}
+# n = Anzahl der Messwertpaare
+pwr.t.test(d = -0.5 / 1.87,
+           sig.level = .05,
+           power = .80,
+           type = "paired",
+           alternative = "less")
+```
+
+#### Post-hoc-Poweranalyse: abhängiger t-Test
+
+```{r}
+x1 <- mtcars$mpg
+x2 <- mtcars$mpg * 0.425
+```
+
+```{r}
+# SD der Differenzwerte
+sd.diff <- sd(x1 - x2,
+              na.rm = TRUE)
+
+sd.diff
+
+# Power für maximal vernachlässigbaren Unterschied von 1
+pwr.t.test(n = 84,
+           d = 1 / sd.diff,
+           sig.level = .05,
+           type = "paired",
+           alternative = "two.sided")
+```
+
+#### Poweranalyse: einfaktorielle ANOVA
+
+```{r}
+# A-priori: benötigtes n pro Gruppe
+pwr.anova.test(k = 3,
+               f = .10,
+               sig.level = .05,
+               power = .95)
+
+# Umrechnung eta^2 -> f
+eta2_to_f(.02)
+
+# Post-hoc: Power bei ungefähr gleichen Gruppengrößen
+pwr.anova.test(k = 3,
+               n = 28,
+               f = eta2_to_f(.02),
+               sig.level = .05)
+```
+
+#### Poweranalyse: Korrelation
+
+```{r}
+# A-priori: benötigte Stichprobengröße
+pwr.r.test(r = -.30,
+           sig.level = .05,
+           power = .90,
+           alternative = "less")
+
+# Korrelationsanalyse
+cor.test(mtcars$mpg,
+         mtcars$wt,
+         use = "pairwise.complete.obs")
+
+# Post-hoc: Power bei n = 82 und maximal irrelevanter Korrelation r = .10
+pwr.r.test(n = 82,
+           r = .10,
+           sig.level = .05,
+           alternative = "two.sided")
+```
+
+#### Poweranalyse: Regression
+
+```{r}
+# A-priori-Poweranalyse für einfache lineare Regression
+# f^2 = R^2 / (1 - R^2)
+pwr.f2.test(u = 1,
+            f2 = .45 / (1 - .45),
+            sig.level = .05,
+            power = .80)
+
+# benötigtes n = u + v + 1
+
+# Regressionsmodell
+modell.reg <- lm(mpg ~ wt,
+                 data = mtcars)
+
+summary(modell.reg)
+
+# Post-hoc-Poweranalyse bei maximal irrelevanter Varianzaufklärung R^2 = .01
+pwr.f2.test(u = 1,
+            v = 80,
+            f2 = .01 / (1 - .01),
+            sig.level = .05)
+```
+
+## 21.4 Shannon-Information / $s$-Wert
+
+Die Shannon-Information ist ein alternativer Ansatz zur Interpretation
+von p-Werten.
+
+Statt einer dichotomen Entscheidung („signifikant“ vs. „nicht
+signifikant“) wird betrachtet:
+
+> Wie überraschend sind die Daten unter $H_0$?
+
+Der s-Wert transformiert den p-Wert in eine Informationsmenge.
+
+### 21.4.1 Formel
+
+$$s = -\log_2(p)$$
+
+### 21.4.2 Interpretation
+
+Großer s-Wert:
+
+- Daten stärker überraschend unter $H_0$
+- mehr Evidenz gegen $H_0$
+
+Kleiner s-Wert:
+
+- Daten weniger überraschend
+- weniger Evidenz gegen $H_0$
+
+### 21.4.3 Beispiele
+
+$$p = 0.05$$
+
+$$s \approx 4.32$$
+
+Interpretation:
+
+Die Daten enthalten ungefähr dieselbe Überraschungsinformation wie:
+
+- etwa 4-mal hintereinander Kopf beim Münzwurf
+
+### 21.4.4 Warum ist das sinnvoll?
+
+Der klassische p-Wert:
+
+- wird oft fehlinterpretiert
+- erzeugt dichotomes Denken
+- suggeriert klare Grenzen
+
+Die Shannon-Information betrachtet Evidenz dagegen kontinuierlich.
+
+Dadurch:
+
+- weniger Fokus auf starre Schwellenwerte
+- bessere Interpretation der Stärke der Evidenz
+
+### 21.4.5 Wichtig
+
+Die Shannon-Information liefert:
+
+- Evidenz gegen $H_0$
+
+aber NICHT:
+
+- Wahrscheinlichkeit für $H_0$
+- Wahrscheinlichkeit für $H_1$
+
+### R-Code: Shannon-Information berechnen
+
+```{r}
+# Funktion für s-Wert
+s_wert <- function(p){
+  -log2(p)
+}
+
+# Beispiele
+s_wert(.05)
+s_wert(.01)
+s_wert(.001)
+```
+
+```{r}
+# Tabelle verschiedener p-Werte und s-Werte
+p_werte <- c(.10, .05, .01, .001)
+
+data.frame(
+  p = p_werte,
+  s = s_wert(p_werte)
+)
+```
+
+### 21.4.6 Zusammenhang mit NHST-Kritik
+
+Die Shannon-Information ist ein Versuch,
+
+- p-Werte informativer zu interpretieren
+- dichotomes Denken zu reduzieren
+- Evidenz kontinuierlich statt kategorisch zu betrachten
+
+Sie gehört damit zu den modernen Erweiterungen des klassischen NHST.
+
+Second-Generation-p-values Likelihood-Ansätze
+
+Diese sollen Evidenz differenzierter bewerten als ein bloßer
+Schwellenwert bei $p=0.05$.
+
+Die Shannon-Information ist nur einer von mehreren modernen Ansätzen,
+die versuchen, die Schwächen klassischer p-Werte zu reduzieren.
+
+Weitere Ansätze sind:
+
+- Second-Generation-p-values
+- Likelihood-Ansätze
+- Bayes-Faktoren
+
+## 21.5 Weitere moderne erweiterungen des NHST
+
+### 21.5.1 Second-Generation-p-values
+
+Second-Generation-p-values (SGPV) sind ein moderner Ansatz, um die
+Schwächen klassischer p-Werte zu reduzieren.
+
+Die Grundidee:
+
+Nicht nur prüfen,
+
+> ob ein Effekt „signifikant“ ist,
+
+sondern:
+
+> ob die Daten praktisch relevante Effekte unterstützen.
+
+#### Problem klassischer p-Werte
+
+Ein klassischer p-Wert beantwortet nur:
+
+> Wie ungewöhnlich wären die Daten unter $H_0$?
+
+Dabei entstehen Probleme:
+
+- dichotomes Denken
+- starke Abhängigkeit von Stichprobengröße
+- praktisch irrelevante Effekte können signifikant werden
+- keine Aussage über praktische Relevanz
+
+### 21.5.2 Grundidee der SGPV
+
+Beim Second-Generation-p-value wird geprüft:
+
+> Überlappt das Konfidenzintervall mit einem Bereich praktisch
+> irrelevanter Effekte?
+
+Dazu definiert man vorher:
+
+- einen Bereich trivialer Effekte
+- die sogenannte *Region of Practical Equivalence* (ROPE)
+
+Beispiel:
+
+Ein Effekt zwischen
+
+$$-0.1 \le d \le 0.1$$
+
+könnte als praktisch irrelevant gelten.
+
+### 21.5.3 Interpretation
+
+#### Fall 1:
+
+Konfidenzintervall vollständig außerhalb der ROPE
+
+→ Evidenz für einen relevanten Effekt
+
+#### Fall 2:
+
+Konfidenzintervall vollständig innerhalb der ROPE
+
+→ Evidenz für praktisch keinen relevanten Effekt
+
+#### Fall 3:
+
+Teilweise Überlappung
+
+→ Ergebnis unklar / weitere Daten nötig
+
+### Vorteil
+
+Second-Generation-p-values:
+
+- reduzieren dichotomes Denken
+- berücksichtigen praktische Relevanz
+- verbinden Effektgrößen mit Unsicherheit
+- verhindern Überinterpretation winziger Effekte
+
+### Nachteil
+
+Es muss vorher festgelegt werden:
+
+> Welche Effektgrößen praktisch relevant sind.
+
+Diese Entscheidung ist teilweise subjektiv.
+
+### 21.5.4 Likelihood-Ansätze
+
+Likelihood-Ansätze bewerten,
+
+> wie gut verschiedene Hypothesen die beobachteten Daten erklären.
+
+Im Mittelpunkt steht die sogenannte Likelihood:
+
+$$L(H \mid Daten)$$
+
+Sie beschreibt:
+
+> Wie wahrscheinlich die beobachteten Daten unter einer bestimmten
+> Hypothese sind.
+
+#### Unterschied zum klassischen NHST
+
+Klassischer p-Wert:
+
+$$P(Daten \mid H_0)$$
+
+Likelihood-Ansätze vergleichen dagegen direkt:
+
+$$\frac{L(H_1)}{L(H_0)}$$
+
+also:
+
+> Welche Hypothese erklärt die Daten besser?
+
+#### Likelihood-Ratio
+
+Die zentrale Größe ist häufig die Likelihood-Ratio:
+
+$$LR = \frac{L(H_1)}{L(H_0)}$$
+
+Interpretation:
+
+- große Werte → Evidenz für $H_1$
+- kleine Werte → Evidenz für $H_0$
+
+#### Vorteile von Likelihood-Ansätzen
+
+- kontinuierliche Evidenzbewertung
+- kein starres Signifikanzniveau
+- weniger dichotomes Denken
+- direkter Hypothesenvergleich
+
+#### Zusammenhang mit Bayesianischer Statistik
+
+Likelihood-Ansätze bilden die Grundlage vieler bayesianischer Verfahren.
+
+Der Bayes-Faktor basiert ebenfalls auf einem Vergleich von Likelihoods.
+
+#### Einordnung
+
+Second-Generation-p-values und Likelihood-Ansätze gehören zu modernen
+Versuchen,
+
+- NHST zu verbessern
+- Evidenz differenzierter zu bewerten
+- praktische Relevanz stärker zu berücksichtigen
+- starre Signifikanzgrenzen zu vermeiden
+
+## 21.6 Open Science
+
+Wichtige Maßnahmen:
+
+- Präregistrierung
+- offene Daten
+- offene Analyseskripte
+- Replikationsstudien
+- transparente Berichterstattung
+
+Ziel:
+
+höhere Reproduzierbarkeit wissenschaftlicher Ergebnisse.
+
+### 21.6.1 Präregistrierung und Replikation
+
+#### Präregistrierung
+
+Vor der Datenerhebung werden festgelegt:
+
+- Hypothesen
+- Analysen
+- Ausschlusskriterien
+
+Dadurch werden reduziert:
+
+- p-Hacking
+- selektive Berichterstattung
+- nachträgliche Hypothesenbildung
+
+#### Replikation
+
+Ein einzelnes signifikantes Ergebnis reicht nicht aus.
+
+Wichtig ist:
+
+> Lassen sich Ergebnisse reproduzieren?
+
+Replikationen erhöhen:
+
+- Reliabilität
+- wissenschaftliche Glaubwürdigkeit
+- Stabilität von Befunden
+
+## 21.7 Meta-Analysen
+
+Einzelne Studien liefern oft instabile Ergebnisse.
+
+Meta-Analysen kombinieren Effektgrößen aus vielen Studien, um den
+tatsächlichen Populationseffekt präziser zu schätzen.
+
+Vorteile:
+
+- höhere Präzision
+- größere Stichprobenbasis
+- stabilere Effektschätzung
+- bessere Reproduzierbarkeit
+
+Meta-Analysen spielen daher eine zentrale Rolle innerhalb moderner
+statistischer Methodik.
+
+# 22 Alternativen zu NHST (Bayesianische Statistik)
+
+## 22.1 Grundidee
+
+Die Bayesianische Statistik ist ein inferenzstatistischer Ansatz zur
+Schätzung von Wahrscheinlichkeiten von Hypothesen anhand von Daten.
+
+Im Gegensatz zur frequentistischen Statistik interessiert man sich
+direkt für:
+
+$$P(H \mid D)$$
+
+also:
+
+> Wahrscheinlichkeit der Hypothese gegeben die Daten
+
+Der frequentistische Ansatz betrachtet dagegen:
+
+$$P(D \mid H_0)$$
+
+also:
+
+> Wahrscheinlichkeit der Daten unter Annahme der Nullhypothese
+
+### Unterschiedlicher Wahrscheinlichkeitsbegriff
+
+Frequentistisch: - Wahrscheinlichkeit = relative Häufigkeit bei
+unendlich vielen Wiederholungen
+
+Bayesianisch: - Wahrscheinlichkeit = subjektiver Grad der Überzeugung /
+Unsicherheit
+
+## 22.2 Bedingte Wahrscheinlichkeit
+
+Grundlage ist die bedingte Wahrscheinlichkeit:
+
+$$P(A \mid B)=\frac{P(A \cap B)}{P(B)}$$
+
+Interpretation:
+
+- Wahrscheinlichkeit von $A$, wenn $B$ bereits eingetreten ist
+
+## 22.3 Bayes-Theorem
+
+Aus der bedingten Wahrscheinlichkeit ergibt sich:
+
+$$P(H\mid D)=\frac{P(D\mid H)\cdot P(H)}{P(D)}$$
+
+mit:
+
+| Term          | Bedeutung  |
+|---------------|------------|
+| $P(H)$        | Prior      |
+| $P(D \mid H)$ | Likelihood |
+| $P(D)$        | Evidenz    |
+| $P(H \mid D)$ | Posterior  |
+
+Alternativ:
+
+$$P(H\mid D)=\frac{P(D\mid H)\cdot P(H)}{P(H)P(D\mid H)+P(\neg H)P(D\mid \neg H)}$$
+
+## 22.4 Prior-Verteilung
+
+Der Prior beschreibt das Vorwissen über einen Parameter vor der
+Datenerhebung.
+
+Beispiel:
+
+- erwarteter Mittelwert
+- erwartete Effektgröße
+
+Man nimmt also bereits vor den Daten eine Wahrscheinlichkeitsverteilung
+für den Parameter an.
+
+### Noninformative Prior
+
+- kaum Vorwissen
+- große Varianz
+- alle Werte ähnlich plausibel
+
+Formal oft:
+
+$$P(\theta)=\text{konstant}$$
+
+### Informative Prior
+
+- enthält Vorwissen
+- bestimmte Werte wahrscheinlicher
+
+Beispiel:
+
+$$\theta \sim \mathcal{N}(100,10^2)$$
+
+Interpretation:
+
+- Mittelwert vermutlich nahe 100
+- Standardabweichung 10
+
+Je kleiner die Varianz:
+
+$$\text{Precision} = \frac{1}{\sigma^2}$$
+
+desto präziser der Prior.
+
+### Sensitivitätsanalyse
+
+Vergleich verschiedener Prior-Spezifikationen.
+
+Ziel: - prüfen, wie stark Ergebnisse vom Prior abhängen
+
+## 22.5 Likelihood
+
+Die Likelihood beschreibt:
+
+> Wie wahrscheinlich sind die beobachteten Daten für bestimmte
+> Parameterwerte?
+
+Formal:
+
+$$L(\theta \mid D)=P(D\mid \theta)$$
+
+Bei Normalverteilung:
+
+$$L(\mu\mid x)=\prod_{i=1}^{n}\frac{1}{\sqrt{2\pi\sigma^2}}\exp\left(-\frac{(x_i-\mu)^2}{2\sigma^2}\right)$$
+
+Maximum der Likelihood:
+
+→ ML-Schätzer.
+
+## 22.6 Posterior-Verteilung
+
+Prior und Likelihood werden kombiniert, der Posterior ist ein Kompromiss
+aus:
+
+- Vorwissen (Prior)
+- beobachteten Daten (Likelihood)
+
+$$P(\theta\mid D)\propto P(D\mid \theta)\cdot P(\theta)$$
+
+Der Posterior ist also proportional zu:
+
+``` r
+Likelihood × Prior
+```
+
+Interpretation:
+
+- aktualisierte Verteilung des Parameters nach Beobachtung der Daten
+
+## 22.7 Posterior Mean
+
+Bayesianischer Punktschätzer:
+
+$$E(\theta \mid D)$$
+
+= Erwartungswert der Posteriorverteilung.
+
+## 22.8 Credible Interval / Posterior Probability Interval
+
+Bayesianisches Analogon zum Konfidenzintervall.
+
+95%-Credible-Interval:
+
+$$P(a \le \theta \le b \mid D)=0.95$$
+
+Interpretation:
+
+> Mit 95% Wahrscheinlichkeit liegt der wahre Parameter zwischen $a$ und
+> $b$.
+
+Das ist eine echte Wahrscheinlichkeitsaussage.
+
+### Posterior Predictive Checking
+
+Bayesianische Modellprüfung durch Vergleich von:
+
+- beobachteten Daten
+- simulierten Daten aus dem Modell
+
+Posterior predictive p value (ppp):
+
+- Werte nahe 0.5 → guter Modellfit
+
+## 22.9 Unterschied zum Konfidenzintervall
+
+Frequentistisch:
+
+$$P(a \le \theta \le b)=?$$
+
+nicht erlaubt, weil:
+
+- Parameter fest
+- Intervall zufällig
+
+Korrekte Interpretation:
+
+> 95% aller so konstruierten Intervalle enthalten den wahren Parameter.
+
+Bayesianisch:
+
+- Parameter zufällig
+- Wahrscheinlichkeitsaussage direkt möglich
+
+## 22.10 Einfluss des Priors
+
+Posterior hängt ab von:
+
+- Prior
+- Datenmenge
+
+### Große Stichprobe
+
+Likelihood dominiert:
+
+$$Posterior \approx Likelihood$$
+
+Prior kaum relevant.
+
+### Kleine Stichprobe
+
+Prior hat starken Einfluss.
+
+### Misspezifizierter Prior
+
+Falscher Prior:
+
+- verzerrt Posterior
+- verschiebt Schätzungen
+
+## 22.11 MCMC-Verfahren
+
+Posteriorverteilungen oft analytisch nicht lösbar.
+
+Deshalb numerische Approximation:
+
+- Markov Chain Monte Carlo (MCMC)
+
+Idee:
+
+- wiederholtes Sampling aus Posteriorverteilung
+
+Wichtige Verfahren:
+
+- Gibbs Sampling
+- Metropolis-Hastings
+
+## 22.12 Vorteile
+
+### Vorwissen integrierbar
+
+$$P(H)$$
+
+kann frühere Forschung enthalten.
+
+### Updating Knowledge
+
+Bayesianische Statistik erlaubt:
+
+- neue Daten mit bestehendem Wissen zu kombinieren
+- Wissen schrittweise zu aktualisieren
+
+→ Wissenschaft wird kumulativ
+
+### Direkte Wahrscheinlichkeitsaussagen
+
+$$P(H\mid D)$$
+
+### Kleinere Stichproben möglich
+
+Bayesianische Verfahren können bei kleinen Stichproben Vorteile haben,
+insbesondere wenn sinnvolle Priors verfügbar sind. Bayesianische
+Verfahren oft stabiler bei kleinen $n$.
+
+### Flexibel
+
+- komplexe Modelle
+- asymmetrische Verteilungen
+- hierarchische Modelle
+
+## 22.13 Kritik
+
+### Subjektivität des Priors
+
+Priorwahl kann Ergebnisse beeinflussen.
+
+### Hoher Rechenaufwand
+
+MCMC benötigt viele Iterationen.
+
+### Sensitivität
+
+Bei kleinen Stichproben:
+
+- starker Prior-Effekt
+
+## 22.14 Vergleich Frequentismus vs. Bayes
+
+| Frequentistisch     | Bayesianisch                  |
+|---------------------|-------------------------------|
+| $P(D\mid H_0)$      | $P(H\mid D)$                  |
+| Parameter fest      | Parameter zufällig            |
+| p-Wert              | Posterior                     |
+| Konfidenzintervall  | Credible Interval             |
+| keine Priors        | Priors möglich                |
+| relative Häufigkeit | subjektive Wahrscheinlichkeit |
+
+# 23. Gute wissenschaftliche Praxis / Wissenschaftlicher Forschungsprozess
+
+## 23.1 Grundprinzip
+
+### ATOM-Prinzip
+
+> Accept uncertainty. Be thoughtful, open, and modest.
+
+Bedeutung:
+
+- Unsicherheit akzeptieren
+- transparent arbeiten
+- kritisch bleiben
+- Ergebnisse vorsichtig interpretieren
+
+## 23.2 Regeln guter wissenschaftlicher Praxis
+
+- lege artis ("nach den Regeln der Kunst") arbeiten
+  - Man arbeitet nach den aktuell anerkannten fachlichen Standards und
+    Methoden.
+- ethische Standards einhalten
+- Primärdaten sichern
+- Ergebnisse dokumentieren
+- eigene Ergebnisse kritisch hinterfragen
+- ehrlich berichten
+- transparent arbeiten
+- replizierbar forschen
+- Plagiate vermeiden
+- wissenschaftliche Transparenz
+- Wissenschaft als kumulativen Prozess verstehen
+
+## 23.3 Präregistrierung
+
+### Grundidee
+
+Vor Datenerhebung festlegen:
+
+- Hypothesen
+- Stichprobengröße
+- Variablen
+- Ausschlusskriterien
+- Auswertungsmethoden
+- relevante Effekte
+
+### Vorteile
+
+Verhindert:
+
+- P-Hacking
+- HARKing
+- selektives Berichten
+- flexible Datenauswertung
+
+## 23.4 Idealer Forschungsprozess
+
+1.  Forschungsfrage / Hypothesen
+2.  Grobplanung
+3.  Feinplanung
+4.  Präregistrierung
+5.  Datenerhebung
+6.  Datenanalyse
+7.  Publikation
+8.  Veröffentlichung von Daten & Materialien
+
+## 23.5 Konfidenzintervall und Effektgrößen
+
+Statt nur:
+
+- signifikant / nicht signifikant
+
+sollte man berichten:
+
+- Effektgrößen
+- Konfidenzintervalle
+
+## 23.6 Open Science
+
+### Ziele
+
+- Transparenz
+- Reproduzierbarkeit
+- offene Daten
+- offene Materialien
+
+### Open Science Framework (OSF)
+
+Plattform für:
+
+- Präregistrierungen
+- Datenspeicherung
+- Materialbereitstellung
+
+## 23.7 Replikationen
+
+### Warum wichtig?
+
+Eine einzelne Studie hat geringe Aussagekraft.
+
+Erst viele Replikationen erhöhen Sicherheit.
+
+### Arten
+
+- direkte Replikation
+- konzeptuelle Replikation
+- Registered Replication Reports

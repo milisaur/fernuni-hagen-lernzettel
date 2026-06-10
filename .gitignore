@@ -1,0 +1,51 @@
+# R
+.Rhistory
+.RData
+.Ruserdata
+
+# RStudio
+.Rproj.user/
+
+# Quarto
+.quarto/
+
+# Render outputs
+*.docx
+notes/*.pdf
+
+# Render-Artefakte
+*_files/
+*.utf8.md
+*.knit.md
+*.aux
+*.toc
+*.tex
+!header.tex
+!license_notice.tex
+notes/*_files/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Nix
+.direnv/
+.envrc
+
+# Private data
+private/
+data/raw/
+
+# Logs
+*.log
+
+# Neovim Sessions
+Session.vim
+
+# Temp data
+*~
+*.swp
+*.swo
+
+
+/.quarto/

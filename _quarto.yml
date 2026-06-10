@@ -1,0 +1,15 @@
+project:
+  type: default
+  output-dir: exports
+
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+
+  pdf:
+    toc: true
+    number-sections: true
+    include-before-body: ./license_notice.tex
+    include-in-header: ./header.tex
